@@ -28,7 +28,7 @@ fn main() {
                 request.respond(response.with_header(header)).unwrap();
             },
             ("GET", "/client.wasm") => {
-                let target_path = PathBuf::from("target").join(WASM_TRIPLET).join("release");
+                let target_path = PathBuf::from("target").join(WASM_TRIPLET).join("debug");
                 let data = std::fs::read(target_path.join("client.wasm")).unwrap();
                 let header = "Content-type: application/wasm".parse::<Header>().unwrap();
                 let response = Response::from_data(data);
