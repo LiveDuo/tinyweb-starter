@@ -41,10 +41,10 @@ async fn fetch_array_buffer(url: &str) -> Result<Vec<u8>, String> {
 
 fn get_pokemon() {
     tinyweb::executor::run(async move {
-        let result = fetch_array_buffer("https://pokeapi.co/api/v2/pokemon/1").await.unwrap();
+        let result = fetch_array_buffer("/api/ping").await.unwrap();
         let string = String::from_utf8(result).unwrap();
         let value = json::parse(&string).unwrap();
-        dom::alert(&value["name"].as_str().unwrap());
+        dom::alert(&format!("{}", value["pong"].as_bool().unwrap()));
     });
 }
 
