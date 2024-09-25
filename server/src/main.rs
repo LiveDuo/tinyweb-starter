@@ -1,10 +1,18 @@
 
+use std::process::Command;
 use std::path::PathBuf;
 
 use tiny_http::{Server, Header, Response};
 
 // cargo run -p server
 fn main() {
+
+    const WASM_TRIPLET: &str = "wasm32-unknown-unknown";
+    
+    print!("Building wasm...");
+    let p = Command::new("cargo").args(["build", "-p", "client", "--target", WASM_TRIPLET]).output().unwrap();
+    assert!(p.status.success());
+    println!("Done");
 
     let server = Server::http("0.0.0.0:8000").unwrap();
     println!("Listening on port {:?}", server.server_addr().port());
@@ -20,7 +28,7 @@ fn main() {
                 request.respond(response.with_header(header)).unwrap();
             },
             ("GET", "/client.wasm") => {
-                let target_path = PathBuf::from("target").join("wasm32-unknown-unknown").join("release");
+                let target_path = PathBuf::from("target").join(WASM_TRIPLET).join("release");
                 let data = std::fs::read(target_path.join("client.wasm")).unwrap();
                 let header = "Content-type: application/wasm".parse::<Header>().unwrap();
                 let response = Response::from_data(data);
