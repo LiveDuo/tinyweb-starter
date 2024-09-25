@@ -13,13 +13,15 @@ fn main() {
 
         match (request.method().as_str(), request.url()) {
             ("GET", "/") => {
+                let header = "Content-type: text/html".parse::<Header>().unwrap();
                 let response = Response::from_string("<b>hello world</b>");
-                let response = response.with_header("Content-type: text/html".parse::<Header>().unwrap());
-                request.respond(response).unwrap();
+                request.respond(response.with_header(header)).unwrap();
             },
             ("GET", "/ping") => {
-                let response = Response::from_string("pong");
-                request.respond(response).unwrap();
+                let header: Header = "Content-type: application/json".parse::<Header>().unwrap();
+                let message = json::object!{ pong: true };
+                let response = Response::from_string(message.dump());
+                request.respond(response.with_header(header)).unwrap();
             },
             _ => {
                 let response = Response::from_string("Not found");
