@@ -1,11 +1,12 @@
 
+use std::path::PathBuf;
+
 use tiny_http::{Server, Header, Response};
 
 // cargo run -p server
 fn main() {
 
-    
-    let server = Server::http("0.0.0.0:4000").unwrap();
+    let server = Server::http("0.0.0.0:8000").unwrap();
     println!("Listening on port {:?}", server.server_addr().port());
 
     for request in server.incoming_requests() {
@@ -13,15 +14,16 @@ fn main() {
 
         match (request.method().as_str(), request.url()) {
             ("GET", "/") => {
-                // TODO read from file
+                let data = std::fs::read_to_string(PathBuf::from("public").join("index.html")).unwrap();
                 let header = "Content-type: text/html".parse::<Header>().unwrap();
-                let response = Response::from_string("<b>hello world</b>");
+                let response = Response::from_string(data);
                 request.respond(response.with_header(header)).unwrap();
             },
-            ("GET", "/assets/client.wasm") => {
-                // TODO read from file
-                let header = "Content-type: text/html".parse::<Header>().unwrap();
-                let response = Response::from_string("<b>hello world</b>");
+            ("GET", "/client.wasm") => {
+                let target_path = PathBuf::from("target").join("wasm32-unknown-unknown").join("release");
+                let data = std::fs::read(target_path.join("client.wasm")).unwrap();
+                let header = "Content-type: application/wasm".parse::<Header>().unwrap();
+                let response = Response::from_data(data);
                 request.respond(response.with_header(header)).unwrap();
             },
             ("GET", "/api/ping") => {
