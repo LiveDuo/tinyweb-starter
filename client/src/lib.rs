@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use tinyweb::element::El;
-use tinyweb::params::ExternRef;
+use tinyweb::js::ExternRef;
 use tinyweb::signals::{Signal, SignalAsync};
 
 use tinyweb::bindings::{console, dom, history, http_request};
@@ -66,9 +66,9 @@ fn page1() -> El {
             tinyweb::runtime::coroutine(async move {
                 loop {
                     signal_time_clone.set("⏰ tik");
-                    tinyweb::bindings::util::sleep(1_000).await;
+                    tinyweb::bindings::utils::sleep(1_000).await;
                     signal_time_clone.set("⏰ tok");
-                    tinyweb::bindings::util::sleep(1_000).await;
+                    tinyweb::bindings::utils::sleep(1_000).await;
                 }
             });
 
