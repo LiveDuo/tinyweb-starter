@@ -63,7 +63,7 @@ fn page1() -> El {
 
             // start timer
             let signal_time_clone = signal_time_clone.clone();
-            tinyweb::executor::coroutine(async move {
+            tinyweb::runtime::coroutine(async move {
                 loop {
                     signal_time_clone.set("⏰ tik");
                     tinyweb::bindings::util::sleep(1_000).await;
