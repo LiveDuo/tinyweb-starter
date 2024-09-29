@@ -12,9 +12,9 @@ use tinyweb::bindings::http_request::{FetchOptions, FetchResponse, FetchResponse
 const BUTTON_CLASSES: &[&str] = &["bg-blue-500", "hover:bg-blue-700", "text-white", "p-2", "rounded", "m-2"];
 
 #[derive(Debug, Default)]
-struct Runtime { root: Option<ExternRef>, pages: HashMap::<String, El> }
+struct State { root: Option<ExternRef>, pages: HashMap::<String, El> }
 
-impl Runtime {
+impl State {
     fn navigate(&self, page: &str) {
 
         history::history_push_state("test", page);
@@ -28,7 +28,7 @@ impl Runtime {
 }
 
 thread_local! {
-    pub static RUNTIME: RefCell<Runtime> = Default::default();
+    pub static STATE: RefCell<State> = Default::default();
 }
 
 async fn fetch_array_buffer(url: &str) -> Result<Vec<u8>, String> {
@@ -40,7 +40,7 @@ async fn fetch_array_buffer(url: &str) -> Result<Vec<u8>, String> {
 }
 
 fn get_pokemon() {
-    tinyweb::executor::run(async move {
+    tinyweb::runtime::run(async move {
         let result = fetch_array_buffer("/api/ping").await.unwrap();
         let string = String::from_utf8(result).unwrap();
         let value = json::parse(&string).unwrap();
@@ -76,7 +76,7 @@ fn page1() -> El {
         .classes(&["m-2"])
         .child(El::new("button").text("api").classes(&BUTTON_CLASSES).on_click(|_| { get_pokemon(); }))
         .child(El::new("button").text("page 2").classes(&BUTTON_CLASSES).on_click(move |_| {
-            RUNTIME.with(|s| { s.borrow().navigate("page2"); });
+            STATE.with(|s| { s.borrow().navigate("page2"); });
         }))
         .child(El::new("br"))
         .child(El::new("button").text("add").classes(&BUTTON_CLASSES).on_click(move |_| {
@@ -97,7 +97,7 @@ fn page2() -> El {
     El::new("div")
         .classes(&["m-2"])
         .child(El::new("button").text("page 1").classes(&BUTTON_CLASSES).on_click(move |_| {
-            RUNTIME.with(|s| { s.borrow().navigate("page1"); });
+            STATE.with(|s| { s.borrow().navigate("page1"); });
         }))
 }
 
@@ -114,10 +114,10 @@ pub fn main() {
     let body = dom::query_selector("body");
     page1.mount(&body);
     
-    // set runtime
+    // set state
     let pages_iter = [("page1".to_owned(), page1), ("page2".to_owned(), page2)];
     let pages = HashMap::<String, El>::from_iter(pages_iter);
-    let runtime = Runtime { pages, root: Some(body) };
-    RUNTIME.with(|s| { *s.borrow_mut() = runtime; });
+    let state = State { pages, root: Some(body) };
+    STATE.with(|s| { *s.borrow_mut() = state; });
 
 }
