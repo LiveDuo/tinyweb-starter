@@ -20,8 +20,6 @@ fn main() {
     let server = Server::http("0.0.0.0:8000").unwrap();
     println!("Listening on port {:?}", server.server_addr().port());
 
-    // let mut file = OpenOptions::new().create(true).read(true).write(true).open("/tmp/data").unwrap();
-
     let mut tasks = Vec::<Task>::new();
 
     for mut request in server.incoming_requests() {
