@@ -1,9 +1,11 @@
 
-use std::io::{Read, Write};
-use std::{fs::OpenOptions, process::Command};
+use std::process::Command;
 use std::path::PathBuf;
 
 use tiny_http::{Server, Header, Response};
+
+#[derive(Clone)]
+struct Task { title: String, done: bool }
 
 // cargo run -p server
 fn main() {
@@ -18,7 +20,9 @@ fn main() {
     let server = Server::http("0.0.0.0:8000").unwrap();
     println!("Listening on port {:?}", server.server_addr().port());
 
-    let mut file = OpenOptions::new().create(true).read(true).write(true).open("/tmp/data").unwrap();
+    // let mut file = OpenOptions::new().create(true).read(true).write(true).open("/tmp/data").unwrap();
+
+    let mut tasks = Vec::<Task>::new();
 
     for mut request in server.incoming_requests() {
         println!("{:?} {:?}", request.method(), request.url());
@@ -37,7 +41,7 @@ fn main() {
                 let response = Response::from_data(data);
                 request.respond(response.with_header(header)).unwrap();
             },
-            (_, _) if request.url().starts_with("/api/todo") => {
+            (_, _) if request.url().starts_with("/api/tasks") => {
 
                 let header: Header = "Content-type: application/json".parse::<Header>().unwrap();
 
@@ -47,38 +51,20 @@ fn main() {
                 match request.method().as_str() {
                     "GET" => {
 
-                        let id_opt = request.url().split("/").nth(3);
-                        if id_opt.is_none() {
-                            let response = Response::from_string("Invalid parameter");
-                            request.respond(response).unwrap();
-                            return;
-                        }
-
-                        let mut file_data = String::new();
-                        file.read_to_string(&mut file_data).unwrap();
-
-                        let id = id_opt.unwrap().parse::<usize>().unwrap();
-                        let line_opt = file_data.split("\n").nth(id);
-                        if line_opt.is_none() {
-                            let response = Response::from_string("Line error");
-                            request.respond(response).unwrap();
-                            return;
-                        }
-                        
-                        let message = json::object!{ data: line_opt.unwrap() };
+                        let _tasks = tasks.iter()
+                            .map(|s| json::object!{ title: s.title.to_owned(), done: s.done.to_owned() }).collect::<Vec<_>>();
+                        let message = json::object!{ tasks: _tasks };
                         let response = Response::from_string(message.dump());
                         request.respond(response.with_header(header)).unwrap();
                     },
                     "POST" => {
 
-                        let mut file_data = String::new();
-                        file.read_to_string(&mut file_data).unwrap();
-
-                        let mut lines = file_data.split("\n").collect::<Vec<_>>();
-                        lines.push("data");
-                        std::fs::write("/tmp/data", lines.join("\n")).unwrap();
+                        let value = json::parse(body.as_str()).unwrap();
+                        let title = value["title"].as_str().unwrap().to_owned();
+                        let done = value["done"].as_bool().unwrap();
+                        tasks.push(Task { title, done });
                         
-                        let message = json::object!{ sucess: true };
+                        let message = json::object!{ success: true };
                         let response = Response::from_string(message.dump());
                         request.respond(response.with_header(header)).unwrap();
 
@@ -92,21 +78,20 @@ fn main() {
                             return;
                         }
 
-                        let mut file_data = String::new();
-                        file.read_to_string(&mut file_data).unwrap();
-
                         let id = id_opt.unwrap().parse::<usize>().unwrap();
-                        let mut lines = file_data.split("\n").collect::<Vec<_>>();
-                        if id > lines.len() {
-                            let response = Response::from_string("File error");
+                        let task_opt = tasks.get_mut(id);
+                        if task_opt.is_none() {
+                            let response = Response::from_string("Task error");
                             request.respond(response).unwrap();
                             return;
                         }
 
-                        lines[id] = body.as_str();
-                        file.write(lines.join("\n").as_bytes()).unwrap();
+                        let value = json::parse(body.as_str()).unwrap();
+                        let title = value["title"].as_str().unwrap().to_owned();
+                        let done = value["done"].as_bool().unwrap();
+                        *task_opt.unwrap() = Task { title, done };
                         
-                        let message = json::object!{ sucess: true };
+                        let message = json::object!{ success: true };
                         let response = Response::from_string(message.dump());
                         request.respond(response.with_header(header)).unwrap();
 
@@ -120,15 +105,17 @@ fn main() {
                             return;
                         }
 
-                        let mut file_data = String::new();
-                        file.read_to_string(&mut file_data).unwrap();
-
                         let id = id_opt.unwrap().parse::<usize>().unwrap();
-                        let mut lines = file_data.split("\n").collect::<Vec<_>>();
-                        lines.remove(id);
-                        file.write(lines.join("\n").as_bytes()).unwrap();
+                        let task_opt = tasks.get_mut(id);
+                        if task_opt.is_none() {
+                            let response = Response::from_string("Task error");
+                            request.respond(response).unwrap();
+                            return;
+                        }
+
+                        tasks.remove(id);
                         
-                        let message = json::object!{ sucess: true };
+                        let message = json::object!{ success: true };
                         let response = Response::from_string(message.dump());
                         request.respond(response.with_header(header)).unwrap();
 
