@@ -4,10 +4,8 @@ use std::path::PathBuf;
 
 use tiny_http::{Server, Header, Response};
 
-#[derive(Clone)]
 struct Task { title: String, done: bool }
 
-// cargo run -p server
 fn main() {
 
     const WASM_TRIPLET: &str = "wasm32-unknown-unknown";
