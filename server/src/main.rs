@@ -17,7 +17,7 @@ fn main() {
         println!("Done");
     }
 
-    let server = Server::http("0.0.0.0:8000").unwrap();
+    let server = Server::http("0.0.0.0:8080").unwrap();
     println!("Listening on port {:?}", server.server_addr().port());
 
     let mut tasks = Vec::<Task>::new();
