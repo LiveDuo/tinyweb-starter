@@ -1,3 +1,8 @@
+
+# colima start / stop
+# docker tag tinyweb-starter gcr.io/$(gcloud config get-value project)/tinyweb-starter
+# docker push gcr.io/$(gcloud config get-value project)/tinyweb-starter
+
 FROM rust
 
 COPY . .
