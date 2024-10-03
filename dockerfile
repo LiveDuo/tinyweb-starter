@@ -4,6 +4,7 @@
 # gcloud projects list / export PROJECT_ID=$PROJECT_ID
 # docker tag tinyweb-starter gcr.io/$PROJECT_ID/tinyweb-starter
 # docker push gcr.io/$PROJECT_ID/tinyweb-starter
+# gcloud run deploy $PROJECT_ID --image gcr.io/$PROJECT_ID/tinyweb-starter --project $PROJECT_ID --allow-unauthenticated
 
 FROM rust
 
