@@ -10,10 +10,12 @@ fn main() {
 
     const WASM_TRIPLET: &str = "wasm32-unknown-unknown";
     
-    print!("Building wasm...");
-    let p = Command::new("cargo").args(["build", "-p", "client", "--target", WASM_TRIPLET]).output().unwrap();
-    assert!(p.status.success());
-    println!("Done");
+    if cfg!(debug_assertions) {
+        print!("Building wasm...");
+        let p = Command::new("cargo").args(["build", "-p", "client", "--target", WASM_TRIPLET]).output().unwrap();
+        assert!(p.status.success());
+        println!("Done");
+    }
 
     let server = Server::http("0.0.0.0:8000").unwrap();
     println!("Listening on port {:?}", server.server_addr().port());
