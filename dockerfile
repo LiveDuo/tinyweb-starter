@@ -9,6 +9,7 @@ COPY . .
 
 EXPOSE 8080:8080
 
+RUN rustup target add wasm32-unknown-unknown
 RUN cargo build -p client --target wasm32-unknown-unknown -r
 RUN cargo build -p server -r
 
