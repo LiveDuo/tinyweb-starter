@@ -9,6 +9,9 @@ use tinyweb::signals::{Signal, SignalAsync};
 use tinyweb::bindings::{console, dom, history, http_request};
 use tinyweb::bindings::http_request::{FetchOptions, FetchResponse, FetchResponseType};
 
+use crate::FetchResponse::ArrayBuffer;
+use crate::FetchResponseType::ArrayBuffer as ArrayBufferType;
+
 const BUTTON_CLASSES: &[&str] = &["bg-blue-500", "hover:bg-blue-700", "text-white", "p-2", "rounded", "m-2"];
 
 #[derive(Debug, Default)]
@@ -31,18 +34,13 @@ thread_local! {
     pub static STATE: RefCell<State> = Default::default();
 }
 
-async fn fetch_array_buffer(url: &str) -> Result<Vec<u8>, String> {
-    let fetch_options = FetchOptions { url, response_type: FetchResponseType::ArrayBuffer, ..Default::default()};
-    match http_request::fetch(fetch_options).await {
-        FetchResponse::ArrayBuffer(_, ab) => Ok(ab),
-        FetchResponse::Text(_, _) => Err("Invalid response".to_owned()),
-    }
-}
-
 fn get_pokemon() {
     tinyweb::runtime::run(async move {
-        let result = fetch_array_buffer("/api/ping").await.unwrap();
-        let string = String::from_utf8(result).unwrap();
+
+        let fetch_options = FetchOptions { url: "/api/ping", response_type: ArrayBufferType, ..Default::default()};
+        let fetch_res = http_request::fetch(fetch_options).await;
+        let result = match fetch_res { ArrayBuffer(_, d) => Ok(d), _ => Err(()), };
+        let string = String::from_utf8(result.unwrap()).unwrap();
         let value = json::parse(&string).unwrap();
         dom::alert(&format!("{}", value["pong"].as_bool().unwrap()));
     });
