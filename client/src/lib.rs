@@ -7,10 +7,7 @@ use tinyweb::js::ExternRef;
 use tinyweb::signals::{Signal, SignalAsync};
 
 use tinyweb::bindings::{console, dom, history, http_request};
-use tinyweb::bindings::http_request::{FetchOptions, FetchResponse, FetchResponseType};
-
-use crate::FetchResponse::ArrayBuffer;
-use crate::FetchResponseType::ArrayBuffer as ArrayBufferType;
+use tinyweb::bindings::http_request::{FetchOptions, FetchResponse};
 
 const BUTTON_CLASSES: &[&str] = &["bg-blue-500", "hover:bg-blue-700", "text-white", "p-2", "rounded", "m-2"];
 
@@ -36,12 +33,10 @@ thread_local! {
 
 fn get_pokemon() {
     tinyweb::runtime::run(async move {
-
-        let fetch_options = FetchOptions { url: "/api/ping", response_type: ArrayBufferType, ..Default::default()};
+        let fetch_options = FetchOptions { url: "/api/ping", ..Default::default()};
         let fetch_res = http_request::fetch(fetch_options).await;
-        let result = match fetch_res { ArrayBuffer(_, d) => Ok(d), _ => Err(()), };
-        let string = String::from_utf8(result.unwrap()).unwrap();
-        let value = json::parse(&string).unwrap();
+        let result = match fetch_res { FetchResponse::Text(_, d) => Ok(d), _ => Err(()), };
+        let value = json::parse(&result.unwrap()).unwrap();
         dom::alert(&format!("{}", value["pong"].as_bool().unwrap()));
     });
 }
