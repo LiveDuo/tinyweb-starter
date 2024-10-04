@@ -31,7 +31,7 @@ thread_local! {
     pub static STATE: RefCell<State> = Default::default();
 }
 
-fn get_pokemon() {
+fn call_backend() {
     tinyweb::runtime::run(async move {
         let fetch_options = FetchOptions { url: "/api/ping", ..Default::default()};
         let fetch_res = http_request::fetch(fetch_options).await;
@@ -67,7 +67,7 @@ fn page1() -> El {
 
         })
         .classes(&["m-2"])
-        .child(El::new("button").text("api").classes(&BUTTON_CLASSES).on_click(|_| { get_pokemon(); }))
+        .child(El::new("button").text("api").classes(&BUTTON_CLASSES).on_click(|_| { call_backend(); }))
         .child(El::new("button").text("page 2").classes(&BUTTON_CLASSES).on_click(move |_| {
             STATE.with(|s| { s.borrow().navigate("page2"); });
         }))
