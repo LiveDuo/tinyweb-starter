@@ -28,6 +28,7 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
 }
 
 fn task_component(title: &str) -> El {
+    
     El::new("li")
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
         .child(El::new("div").classes(&["flex", "items-center"])
@@ -42,18 +43,13 @@ fn task_component(title: &str) -> El {
 
 fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
 
-    let mut children = El::new("div");
-    for task in signal_tasks.get() {
-        children = children.child(task_component(&task.title));
-    }
-
     El::new("div")
         .classes(&["mx-auto", "my-10", "w-1/2", "bg-white", "shadow-md", "rounded-lg", "p-6"])
         .child(El::new("div").classes(&["flex", "mb-4"])
             .child(El::new("input").attr("placeholder", "Add task").classes(&["w-full", "px-4" ,"py-2", "mr-2", "rounded", "focus:outline-none"]))
             .child(El::new("button").text("Add").classes(BUTTON_CLASSES))
         )
-        .child(children)
+        .child(El::new("div").children(&signal_tasks.get().iter().map(|t| task_component(&t.title)).collect::<Vec<_>>()))
 }
 
 fn tasks_page() -> El {
