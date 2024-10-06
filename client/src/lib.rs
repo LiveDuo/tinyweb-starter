@@ -27,7 +27,7 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
     json::parse(&result.unwrap()).unwrap()
 }
 
-fn task(title: &str) -> El {
+fn task_component(title: &str) -> El {
     El::new("li")
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
         .child(El::new("div").classes(&["flex", "items-center"])
@@ -40,11 +40,11 @@ fn task(title: &str) -> El {
         )
 }
 
-fn container(signal_tasks: Signal<Vec<Task>>) -> El {
+fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
 
     let mut children = El::new("div");
-    for _task in signal_tasks.get() {
-        children = children.child(task(&_task.title));
+    for task in signal_tasks.get() {
+        children = children.child(task_component(&task.title));
     }
 
     El::new("div")
@@ -103,7 +103,7 @@ fn tasks_page() -> El {
             let el_clone = el.clone();
             signal_tasks.on(move |v| {
                 if let Some(task) = v.last() {
-                    dom::element_set_inner_html(&el_clone, &format!("{} - {}", task.title, task.done)); }
+                    dom::element_set_inner_html(&el_clone, &format!("{} - {} ({})", task.title, task.done, v.len())); }
                 }
             );
         }))
@@ -111,7 +111,7 @@ fn tasks_page() -> El {
             let el_clone = el.clone();
             signal_time.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
         }))
-        .child(container(signal_tasks_clone_2))
+        .child(container_component(signal_tasks_clone_2))
 }
 
 fn about_page() -> El {
