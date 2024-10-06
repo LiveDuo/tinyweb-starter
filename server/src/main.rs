@@ -13,7 +13,9 @@ fn main() {
     if cfg!(debug_assertions) {
         print!("Building wasm...");
         let p = Command::new("cargo").args(["build", "-p", "client", "--target", WASM_TRIPLET]).output().unwrap();
-        assert!(p.status.success());
+        if !p.status.success() {
+            panic!("{}", String::from_utf8(p.stderr).unwrap());
+        }
         println!("Done");
     }
 
