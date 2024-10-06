@@ -50,16 +50,16 @@ fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
         .child(El::new("div").classes(&["flex", "mb-4"])
             .child(El::new("input").attr("placeholder", "Add task").classes(&["w-full", "p-2", "mr-2", "rounded", "focus:outline-none"]))
             .child(El::new("button").text("Add").classes(BUTTON_CLASSES).on_click(move |_s| {
-                let mut tasks = signal_tasks_clone_2.get();
+                let mut tasks = signal_tasks_clone.get();
                 tasks.push(Task { title: "title".to_owned(), done: false });
 
-                signal_tasks_clone_2.set(tasks);
+                signal_tasks_clone.set(tasks);
             }))
         )
         .child(El::new("div")
             .on_mount(move |el| {
                 let el_clone = el.clone();
-                signal_tasks_clone.on(move |v| {
+                signal_tasks_clone_2.on(move |v| {
                     el_clone.children(&v.iter().map(|t| task_component(t)).collect::<Vec<_>>());
                 });
             })
