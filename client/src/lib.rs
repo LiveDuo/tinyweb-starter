@@ -24,6 +24,15 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
     json::parse(&result.unwrap()).unwrap()
 }
 
+fn container() -> El {
+    El::new("div")
+        .classes(&["mx-auto", "my-10", "w-1/2", "bg-white", "shadow-md", "rounded-lg", "p-6"])
+        .child(El::new("div").classes(&["flex", "mb-4"])
+            .child(El::new("input").attr("placeholder", "Add task").classes(&["w-full", "px-4" ,"py-2", "mr-2", "rounded", "focus:outline-none"]))
+            .child(El::new("button").text("Add").classes(&["bg-blue-500", "hover:bg-blue-700", "text-white", "py-2", "px-4", "rounded"]))
+        )
+}
+
 fn page1() -> El {
 
     // count signal
@@ -56,22 +65,18 @@ fn page1() -> El {
                 dom::alert(&format!("{}", result["pong"].as_bool().unwrap()));
             });
         }))
-        .child(El::new("button").text("page 2").classes(&BUTTON_CLASSES).on_click(move |_| {
-            ROUTER.with(|s| { s.borrow().navigate("page2"); });
-        }))
-        .child(El::new("br"))
         .child(El::new("button").text("add").classes(&BUTTON_CLASSES).on_click(move |_| {
             let count = signal_count_clone.get() + 1;
             signal_count_clone.set(count);
+        }))
+        .child(El::new("button").text("page 2").classes(&BUTTON_CLASSES).on_click(move |_| {
+            ROUTER.with(|s| { s.borrow().navigate("page2"); });
         }))
         .child(El::new("div").text("0").on_mount(move |el| {
             let el_clone = el.clone();
             signal_count.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
         }))
-        .child(El::new("div").text("-").on_mount(move |el| {
-            let el_clone = el.clone();
-            signal_time.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
-        }))
+        .child(container())
 }
 
 fn page2() -> El {
