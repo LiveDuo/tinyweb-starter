@@ -76,6 +76,10 @@ fn page1() -> El {
             let el_clone = el.clone();
             signal_count.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
         }))
+        .child(El::new("div").text("-").on_mount(move |el| {
+            let el_clone = el.clone();
+            signal_time.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
+        }))
         .child(container())
 }
 
