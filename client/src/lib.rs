@@ -27,12 +27,12 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
     json::parse(&result.unwrap()).unwrap()
 }
 
-fn task() -> El {
+fn task(title: &str) -> El {
     El::new("li")
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
         .child(El::new("div").classes(&["flex", "items-center"])
             .child(El::new("input").attr("type", "checkbox").classes(&["mr-2"]))
-            .child(El::new("span").text("Item 1"))
+            .child(El::new("span").text(title))
         )
         .child(El::new("div")
             .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700", "mr-2"]))
@@ -48,8 +48,8 @@ fn container() -> El {
             .child(El::new("button").text("Add").classes(BUTTON_CLASSES))
         )
         .child(El::new("ul")
-            .child(task())
-            .child(task())
+            .child(task("Item 1"))
+            .child(task("Item 2"))
         )
 }
 
