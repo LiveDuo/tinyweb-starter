@@ -32,7 +32,7 @@ fn container() -> El {
         .classes(&["mx-auto", "my-10", "w-1/2", "bg-white", "shadow-md", "rounded-lg", "p-6"])
         .child(El::new("div").classes(&["flex", "mb-4"])
             .child(El::new("input").attr("placeholder", "Add task").classes(&["w-full", "px-4" ,"py-2", "mr-2", "rounded", "focus:outline-none"]))
-            .child(El::new("button").text("Add").classes(&["bg-blue-500", "hover:bg-blue-700", "text-white", "py-2", "px-4", "rounded"]))
+            .child(El::new("button").text("Add").classes(BUTTON_CLASSES))
         )
 }
 
@@ -62,19 +62,19 @@ fn tasks_page() -> El {
 
         })
         .classes(&["m-2"])
-        .child(El::new("button").text("api").classes(&BUTTON_CLASSES).on_click(|_| {
+        .child(El::new("button").text("api").classes(BUTTON_CLASSES).on_click(|_| {
             tinyweb::runtime::run(async move {
                 let result = fetch_json(HTTPMethod::GET, format!("/api/ping"), None).await;
                 dom::alert(&format!("{}", result["pong"].as_bool().unwrap()));
             });
         }))
-        .child(El::new("button").text("update").classes(&BUTTON_CLASSES).on_click(move |_| {
+        .child(El::new("button").text("update").classes(BUTTON_CLASSES).on_click(move |_| {
             let mut tasks = signal_tasks_clone.get();
             tasks.push(Task { title: "title".to_owned(), done: false });
 
             signal_tasks_clone.set(tasks);
         }))
-        .child(El::new("button").text("about").classes(&BUTTON_CLASSES).on_click(move |_| {
+        .child(El::new("button").text("about").classes(BUTTON_CLASSES).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("about"); });
         }))
         .child(El::new("div").text("-").on_mount(move |el| {
@@ -95,7 +95,7 @@ fn tasks_page() -> El {
 fn about_page() -> El {
     El::new("div")
         .classes(&["m-2"])
-        .child(El::new("button").text("tasks").classes(&BUTTON_CLASSES).on_click(move |_| {
+        .child(El::new("button").text("tasks").classes(BUTTON_CLASSES).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("tasks"); });
         }))
 }
