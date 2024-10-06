@@ -8,6 +8,7 @@ use tinyweb::signals::{Signal, SignalAsync};
 
 use tinyweb::bindings::{console, dom, http_request};
 use tinyweb::bindings::http_request::*;
+use tinyweb::bindings::utils::*;
 
 #[derive(Clone)]
 struct Task { title: String, done: bool }
@@ -48,10 +49,15 @@ fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
     El::new("div")
         .classes(&["mx-auto", "my-10", "w-1/2", "bg-white", "shadow-md", "rounded-lg", "p-6"])
         .child(El::new("div").classes(&["flex", "mb-4"])
-            .child(El::new("input").attr("placeholder", "Add task").classes(&["w-full", "p-2", "mr-2", "rounded", "focus:outline-none"]))
+            .child(El::new("input").attr("id", "title").attr("placeholder", "Add task").classes(&["w-full", "p-2", "mr-2", "rounded", "focus:outline-none"]))
             .child(El::new("button").text("Add").classes(BUTTON_CLASSES).on_click(move |_s| {
+
+                let title_element = dom::query_selector("#title");
+                set_property_string(&title_element, "value", "");
+                
                 let mut tasks = signal_tasks_clone.get();
-                tasks.push(Task { title: "title".to_owned(), done: false });
+                let title = get_property_string(&title_element, "value");
+                tasks.push(Task { title, done: false });
 
                 signal_tasks_clone.set(tasks);
             }))
