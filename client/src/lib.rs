@@ -41,16 +41,20 @@ fn task(title: &str) -> El {
 }
 
 fn container() -> El {
+
+    let tasks = ["Item 1", "Item 2"];
+    let mut children = El::new("div");
+    for _task in tasks {
+        children = children.child(task(_task));
+    }
+
     El::new("div")
         .classes(&["mx-auto", "my-10", "w-1/2", "bg-white", "shadow-md", "rounded-lg", "p-6"])
         .child(El::new("div").classes(&["flex", "mb-4"])
             .child(El::new("input").attr("placeholder", "Add task").classes(&["w-full", "px-4" ,"py-2", "mr-2", "rounded", "focus:outline-none"]))
             .child(El::new("button").text("Add").classes(BUTTON_CLASSES))
         )
-        .child(El::new("ul")
-            .child(task("Item 1"))
-            .child(task("Item 2"))
-        )
+        .child(children)
 }
 
 fn tasks_page() -> El {
