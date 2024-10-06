@@ -9,6 +9,9 @@ use tinyweb::signals::{Signal, SignalAsync};
 use tinyweb::bindings::{console, dom, http_request};
 use tinyweb::bindings::http_request::*;
 
+#[derive(Clone)]
+struct Task { title: String, done: bool }
+
 const BUTTON_CLASSES: &[&str] = &["bg-blue-500", "hover:bg-blue-700", "text-white", "p-2", "rounded", "m-2"];
 
 thread_local! {
@@ -35,9 +38,9 @@ fn container() -> El {
 
 fn page1() -> El {
 
-    // count signal
-    let signal_count = Signal::new(0);
-    let signal_count_clone = signal_count.clone();
+    // tasks signal
+    let signal_tasks = Signal::new(vec![]);
+    let signal_tasks_clone = signal_tasks.clone();
     
     // time signal
     let signal_time = SignalAsync::new("-");
@@ -65,16 +68,22 @@ fn page1() -> El {
                 dom::alert(&format!("{}", result["pong"].as_bool().unwrap()));
             });
         }))
-        .child(El::new("button").text("add").classes(&BUTTON_CLASSES).on_click(move |_| {
-            let count = signal_count_clone.get() + 1;
-            signal_count_clone.set(count);
+        .child(El::new("button").text("update").classes(&BUTTON_CLASSES).on_click(move |_| {
+            let mut tasks = signal_tasks_clone.get();
+            tasks.push(Task { title: "title".to_owned(), done: false });
+
+            signal_tasks_clone.set(tasks);
         }))
         .child(El::new("button").text("page 2").classes(&BUTTON_CLASSES).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("page2"); });
         }))
-        .child(El::new("div").text("0").on_mount(move |el| {
+        .child(El::new("div").text("-").on_mount(move |el| {
             let el_clone = el.clone();
-            signal_count.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
+            signal_tasks.on(move |v| {
+                if let Some(task) = v.last() {
+                    dom::element_set_inner_html(&el_clone, &format!("{} - {}", task.title, task.done)); }
+                }
+            );
         }))
         .child(El::new("div").text("-").on_mount(move |el| {
             let el_clone = el.clone();
