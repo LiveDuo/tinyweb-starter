@@ -36,7 +36,7 @@ fn container() -> El {
         )
 }
 
-fn page1() -> El {
+fn tasks_page() -> El {
 
     // tasks signal
     let signal_tasks = Signal::new(vec![]);
@@ -74,8 +74,8 @@ fn page1() -> El {
 
             signal_tasks_clone.set(tasks);
         }))
-        .child(El::new("button").text("page 2").classes(&BUTTON_CLASSES).on_click(move |_| {
-            ROUTER.with(|s| { s.borrow().navigate("page2"); });
+        .child(El::new("button").text("about").classes(&BUTTON_CLASSES).on_click(move |_| {
+            ROUTER.with(|s| { s.borrow().navigate("about"); });
         }))
         .child(El::new("div").text("-").on_mount(move |el| {
             let el_clone = el.clone();
@@ -92,11 +92,11 @@ fn page1() -> El {
         .child(container())
 }
 
-fn page2() -> El {
+fn about_page() -> El {
     El::new("div")
         .classes(&["m-2"])
-        .child(El::new("button").text("page 1").classes(&BUTTON_CLASSES).on_click(move |_| {
-            ROUTER.with(|s| { s.borrow().navigate("page1"); });
+        .child(El::new("button").text("tasks").classes(&BUTTON_CLASSES).on_click(move |_| {
+            ROUTER.with(|s| { s.borrow().navigate("tasks"); });
         }))
 }
 
@@ -106,15 +106,15 @@ pub fn main() {
     std::panic::set_hook(Box::new(|e| console::console_log(&e.to_string())));
 
     // get pages
-    let page1 = page1();
-    let page2 = page2();
+    let tasks_page = tasks_page();
+    let about_page = about_page();
     
     // mount page
     let body = dom::query_selector("body");
-    page1.mount(&body);
+    tasks_page.mount(&body);
     
     // set state
-    let pages_iter = [("page1".to_owned(), (page1, None)), ("page2".to_owned(), (page2, None))];
+    let pages_iter = [("tasks".to_owned(), (tasks_page, None)), ("about".to_owned(), (about_page, None))];
     let pages = HashMap::<String, (El, Option<String>)>::from_iter(pages_iter);
     ROUTER.with(|s| {
         *s.borrow_mut() = Router { pages: HashMap::from_iter(pages), root: Some(body) };
