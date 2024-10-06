@@ -10,7 +10,7 @@ use tinyweb::bindings::{console, dom, http_request};
 use tinyweb::bindings::http_request::*;
 use tinyweb::bindings::utils::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Task { title: String, done: bool }
 
 const BUTTON_CLASSES: &[&str] = &["bg-blue-500", "hover:bg-blue-700", "text-white", "p-2", "rounded", "m-2"];
@@ -47,6 +47,18 @@ fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
     let signal_tasks_clone = signal_tasks.clone();
     let signal_tasks_clone_2 = signal_tasks.clone();
     El::new("div")
+        .on_mount(move |_| {
+            tinyweb::runtime::run(async move {
+                let result = fetch_json(HTTPMethod::GET, format!("/api/tasks"), None).await;
+                let tasks = result["tasks"].members().map(|s| {
+                    Task { title: s["title"].as_str().unwrap().to_string(), done: s["done"].as_bool().unwrap() }
+                }).collect::<Vec<_>>();
+
+                console::console_log(&format!("{:?}", tasks));
+                // TODO signal_tasks_clone_3.set(tasks);
+
+            });
+        })
         .classes(&["mx-auto", "my-10", "w-1/2", "bg-white", "shadow-md", "rounded-lg", "p-6"])
         .child(El::new("div").classes(&["flex", "mb-4"])
             .child(El::new("input").attr("id", "title").attr("placeholder", "Add task").classes(&["w-full", "p-2", "mr-2", "rounded", "focus:outline-none"]))
@@ -56,9 +68,16 @@ fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
                 let title = get_property_string(&title_element, "value");
                 
                 let mut tasks = signal_tasks_clone.get();
-                tasks.push(Task { title, done: false });
+                tasks.push(Task { title: title.clone(), done: false });
                 signal_tasks_clone.set(tasks);
                 
+                tinyweb::runtime::run(async move {
+                    let body = json::object!{ title: title, done: false };
+                    let result = fetch_json(HTTPMethod::POST, format!("/api/tasks"), Some(body)).await;
+                    let success = result["success"].as_bool().unwrap();
+                    assert!(success);
+                });
+
                 set_property_string(&title_element, "value", "");
             }))
         )
