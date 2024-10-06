@@ -27,12 +27,29 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
     json::parse(&result.unwrap()).unwrap()
 }
 
+fn task() -> El {
+    El::new("li")
+        .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
+        .child(El::new("div").classes(&["flex", "items-center"])
+            .child(El::new("input").attr("type", "checkbox").classes(&["mr-2"]))
+            .child(El::new("span").text("Item 1"))
+        )
+        .child(El::new("div")
+            .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700", "mr-2"]))
+            .child(El::new("button").text("Delete").classes(&["text-red-500", "hover:text-red-700"]))
+        )
+}
+
 fn container() -> El {
     El::new("div")
         .classes(&["mx-auto", "my-10", "w-1/2", "bg-white", "shadow-md", "rounded-lg", "p-6"])
         .child(El::new("div").classes(&["flex", "mb-4"])
             .child(El::new("input").attr("placeholder", "Add task").classes(&["w-full", "px-4" ,"py-2", "mr-2", "rounded", "focus:outline-none"]))
             .child(El::new("button").text("Add").classes(BUTTON_CLASSES))
+        )
+        .child(El::new("ul")
+            .child(task())
+            .child(task())
         )
 }
 
