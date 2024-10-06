@@ -53,13 +53,13 @@ fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
             .child(El::new("button").text("Add").classes(BUTTON_CLASSES).on_click(move |_s| {
 
                 let title_element = dom::query_selector("#title");
-                set_property_string(&title_element, "value", "");
+                let title = get_property_string(&title_element, "value");
                 
                 let mut tasks = signal_tasks_clone.get();
-                let title = get_property_string(&title_element, "value");
                 tasks.push(Task { title, done: false });
-
                 signal_tasks_clone.set(tasks);
+                
+                set_property_string(&title_element, "value", "");
             }))
         )
         .child(El::new("div")
