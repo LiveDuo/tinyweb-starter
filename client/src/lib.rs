@@ -40,12 +40,11 @@ fn task(title: &str) -> El {
         )
 }
 
-fn container() -> El {
+fn container(signal_tasks: Signal<Vec<Task>>) -> El {
 
-    let tasks = ["Item 1", "Item 2"];
     let mut children = El::new("div");
-    for _task in tasks {
-        children = children.child(task(_task));
+    for _task in signal_tasks.get() {
+        children = children.child(task(&_task.title));
     }
 
     El::new("div")
@@ -60,8 +59,10 @@ fn container() -> El {
 fn tasks_page() -> El {
 
     // tasks signal
-    let signal_tasks = Signal::new(vec![]);
+    let task_1 = Task { title: "title".to_owned(), done: false };
+    let signal_tasks = Signal::new(vec![task_1]);
     let signal_tasks_clone = signal_tasks.clone();
+    let signal_tasks_clone_2 = signal_tasks.clone();
     
     // time signal
     let signal_time = SignalAsync::new("-");
@@ -110,7 +111,7 @@ fn tasks_page() -> El {
             let el_clone = el.clone();
             signal_time.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
         }))
-        .child(container())
+        .child(container(signal_tasks_clone_2))
 }
 
 fn about_page() -> El {
