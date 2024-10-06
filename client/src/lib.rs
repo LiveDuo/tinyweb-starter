@@ -44,11 +44,17 @@ fn task_component(task: &Task) -> El {
 fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
 
     let signal_tasks_clone = signal_tasks.clone();
+    let signal_tasks_clone_2 = signal_tasks.clone();
     El::new("div")
         .classes(&["mx-auto", "my-10", "w-1/2", "bg-white", "shadow-md", "rounded-lg", "p-6"])
         .child(El::new("div").classes(&["flex", "mb-4"])
-            .child(El::new("input").attr("placeholder", "Add task").classes(&["w-full", "px-4" ,"py-2", "mr-2", "rounded", "focus:outline-none"]))
-            .child(El::new("button").text("Add").classes(BUTTON_CLASSES))
+            .child(El::new("input").attr("placeholder", "Add task").classes(&["w-full", "p-2", "mr-2", "rounded", "focus:outline-none"]))
+            .child(El::new("button").text("Add").classes(BUTTON_CLASSES).on_click(move |_s| {
+                let mut tasks = signal_tasks_clone_2.get();
+                tasks.push(Task { title: "title".to_owned(), done: false });
+
+                signal_tasks_clone_2.set(tasks);
+            }))
         )
         .child(El::new("div")
             .on_mount(move |el| {
@@ -66,7 +72,6 @@ fn tasks_page() -> El {
     let task_1 = Task { title: "title".to_owned(), done: false };
     let signal_tasks = Signal::new(vec![task_1]);
     let signal_tasks_clone = signal_tasks.clone();
-    let signal_tasks_clone_2 = signal_tasks.clone();
     
     // time signal
     let signal_time = SignalAsync::new("-");
@@ -94,12 +99,6 @@ fn tasks_page() -> El {
                 dom::alert(&format!("{}", result["pong"].as_bool().unwrap()));
             });
         }))
-        .child(El::new("button").text("update").classes(BUTTON_CLASSES).on_click(move |_| {
-            let mut tasks = signal_tasks_clone.get();
-            tasks.push(Task { title: "title".to_owned(), done: false });
-
-            signal_tasks_clone.set(tasks);
-        }))
         .child(El::new("button").text("about").classes(BUTTON_CLASSES).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("about"); });
         }))
@@ -113,7 +112,7 @@ fn tasks_page() -> El {
             let el_clone = el.clone();
             signal_time.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
         }))
-        .child(container_component(signal_tasks_clone_2))
+        .child(container_component(signal_tasks_clone))
 }
 
 fn about_page() -> El {
