@@ -27,13 +27,13 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
     json::parse(&result.unwrap()).unwrap()
 }
 
-fn task_component(title: &str) -> El {
+fn task_component(task: &Task) -> El {
 
     El::new("li")
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
         .child(El::new("div").classes(&["flex", "items-center"])
-            .child(El::new("input").attr("type", "checkbox").classes(&["mr-2"]))
-            .child(El::new("span").text(title))
+            .child(El::new("input").attr("value", &task.done.to_string()).attr("type", "checkbox").classes(&["mr-2"]))
+            .child(El::new("span").text(&task.title))
         )
         .child(El::new("div")
             .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700", "mr-2"]))
@@ -54,7 +54,7 @@ fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
             .on_mount(move |el| {
                 let el_clone = el.clone();
                 signal_tasks_clone.on(move |v| {
-                    el_clone.children(&v.iter().map(|t| task_component(&t.title)).collect::<Vec<_>>());
+                    el_clone.children(&v.iter().map(|t| task_component(t)).collect::<Vec<_>>());
                 });
             })
         )
@@ -105,10 +105,8 @@ fn tasks_page() -> El {
         }))
         .child(El::new("div").text("-").on_mount(move |el| {
             let el_clone = el.clone();
-            signal_tasks.on(move |v| {
-                if let Some(task) = v.last() {
-                    dom::element_set_inner_html(&el_clone, &format!("{} - {} ({})", task.title, task.done, v.len())); }
-                }
+            signal_tasks.on(move |tasks| {
+                dom::element_set_inner_html(&el_clone, &format!("Total: {}", tasks.len())); }
             );
         }))
         .child(El::new("div").text("-").on_mount(move |el| {
