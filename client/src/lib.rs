@@ -28,7 +28,7 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
     json::parse(&result.unwrap()).unwrap()
 }
 
-fn task_component(task: &Task) -> El {
+fn task_component(_index: usize, task: &Task, _signal_tasks: Signal<Vec<Task>>) -> El {
 
     El::new("li")
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
@@ -65,8 +65,11 @@ fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
         .child(El::new("div")
             .on_mount(move |el| {
                 let el_clone = el.clone();
+                let signal_clone = signal_tasks_clone_2.clone();
                 signal_tasks_clone_2.on(move |v| {
-                    el_clone.children(&v.iter().map(|t| task_component(t)).collect::<Vec<_>>());
+                    el_clone.children(&v.iter().enumerate()
+                        .map(|(i, t)| task_component(i, t, signal_clone.clone()))
+                        .collect::<Vec<_>>());
                 });
             })
         )
