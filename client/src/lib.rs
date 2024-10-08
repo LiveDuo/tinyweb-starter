@@ -42,10 +42,27 @@ fn task_component(_index: usize, task: &Task, _signal_tasks: Signal<Vec<Task>>) 
 
 fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
 
+    // time signal
+    let signal_time = SignalAsync::new("-");
+    let signal_time_clone = signal_time.clone();
+
+    // tasks signal
     let signal_tasks_clone = signal_tasks.clone();
     let signal_tasks_clone_2 = signal_tasks.clone();
     El::new("div")
         .on_mount(move |_| {
+
+            // start timer
+            let signal_time_clone = signal_time_clone.clone();
+            tinyweb::runtime::run(async move {
+                loop {
+                    signal_time_clone.set("⏰ tik");
+                    tinyweb::bindings::utils::sleep(1_000).await;
+                    signal_time_clone.set("⏰ tok");
+                    tinyweb::bindings::utils::sleep(1_000).await;
+                }
+            });
+
             tinyweb::runtime::run(async move {
                 let result = fetch_json(HTTPMethod::GET, format!("/api/tasks"), None).await;
                 let tasks = result["tasks"].members().map(|s| {
@@ -90,6 +107,19 @@ fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
                 });
             })
         )
+        .child(El::new("div")
+            .classes(&["m-2", "text-center"])
+            .child(El::new("span").text("-").on_mount(move |el| {
+                let el_clone = el.clone();
+                signal_tasks.on(move |tasks| {
+                    dom::element_set_inner_html(&el_clone, &format!("Total: {}", tasks.len())); }
+                );
+            }))
+            .child(El::new("span").text("-").classes(&["ml-2"]).on_mount(move |el| {
+                let el_clone = el.clone();
+                signal_time.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
+            }))
+        )
 }
 
 fn tasks_page() -> El {
@@ -99,38 +129,10 @@ fn tasks_page() -> El {
     let signal_tasks = Signal::new(vec![task_1]);
     let signal_tasks_clone = signal_tasks.clone();
 
-    // time signal
-    let signal_time = SignalAsync::new("-");
-    let signal_time_clone = signal_time.clone();
-
     El::new("div")
-        .on_mount(move |_| {
-
-            // start timer
-            let signal_time_clone = signal_time_clone.clone();
-            tinyweb::runtime::run(async move {
-                loop {
-                    signal_time_clone.set("⏰ tik");
-                    tinyweb::bindings::utils::sleep(1_000).await;
-                    signal_time_clone.set("⏰ tok");
-                    tinyweb::bindings::utils::sleep(1_000).await;
-                }
-            });
-
-        })
         .classes(&["m-2"])
         .child(El::new("button").text("about").classes(&["underline", "hover:opacity-50", "m-2"]).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("about"); });
-        }))
-        .child(El::new("div").text("-").on_mount(move |el| {
-            let el_clone = el.clone();
-            signal_tasks.on(move |tasks| {
-                dom::element_set_inner_html(&el_clone, &format!("Total: {}", tasks.len())); }
-            );
-        }))
-        .child(El::new("div").text("-").on_mount(move |el| {
-            let el_clone = el.clone();
-            signal_time.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
         }))
         .child(container_component(signal_tasks_clone))
 }
