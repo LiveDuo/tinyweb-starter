@@ -40,13 +40,14 @@ fn task_component(_index: usize, task: &Task, _signal_tasks: Signal<Vec<Task>>) 
         )
 }
 
-fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
+fn container_component() -> El {
 
     // time signal
     let signal_time = SignalAsync::new("-");
     let signal_time_clone = signal_time.clone();
 
     // tasks signal
+    let signal_tasks = Signal::new(vec![Task { title: "title".to_owned(), done: false }]);
     let signal_tasks_clone = signal_tasks.clone();
     let signal_tasks_clone_2 = signal_tasks.clone();
     El::new("div")
@@ -125,21 +126,19 @@ fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
 fn tasks_page() -> El {
 
     // tasks signal
-    let task_1 = Task { title: "title".to_owned(), done: false };
-    let signal_tasks = Signal::new(vec![task_1]);
-    let signal_tasks_clone = signal_tasks.clone();
+
 
     El::new("div")
-        .classes(&["m-2"])
+        .classes(&["m-2", "text-center"])
         .child(El::new("button").text("about").classes(&["underline", "hover:opacity-50", "m-2"]).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("about"); });
         }))
-        .child(container_component(signal_tasks_clone))
+        .child(container_component())
 }
 
 fn about_page() -> El {
     El::new("div")
-        .classes(&["m-2"])
+        .classes(&["m-2", "text-center"])
         .child(El::new("button").text("tasks").classes(&["underline", "hover:opacity-50", "m-2"]).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("tasks"); });
         }))
