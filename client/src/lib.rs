@@ -124,24 +124,26 @@ fn container_component() -> El {
 }
 
 fn tasks_page() -> El {
-
-    // tasks signal
-
-
-    El::new("div")
-        .classes(&["m-2", "text-center"])
+    let body = El::new("div")
         .child(El::new("button").text("about").classes(&["underline", "hover:opacity-50", "m-2"]).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("about"); });
         }))
-        .child(container_component())
+        .child(container_component());
+    layout_component(&[body])
 }
 
 fn about_page() -> El {
-    El::new("div")
-        .classes(&["m-2", "text-center"])
+    let body = El::new("div")
         .child(El::new("button").text("tasks").classes(&["underline", "hover:opacity-50", "m-2"]).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("tasks"); });
-        }))
+        }));
+    layout_component(&[body])
+}
+
+fn layout_component(children: &[El]) -> El {
+    El::new("div")
+        .classes(&["m-2", "mt-8", "text-center"])
+        .children(children)
 }
 
 #[no_mangle]
