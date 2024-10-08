@@ -13,8 +13,6 @@ use tinyweb::bindings::utils::*;
 #[derive(Clone, Debug)]
 struct Task { title: String, done: bool }
 
-const BUTTON_CLASSES: &[&str] = &["bg-blue-500", "hover:bg-blue-700", "text-white", "p-2", "rounded", "m-2"];
-
 thread_local! {
     pub static ROUTER: RefCell<Router> = RefCell::new(Router::default());
 }
@@ -37,8 +35,8 @@ fn task_component(_index: usize, task: &Task, _signal_tasks: Signal<Vec<Task>>) 
             .child(El::new("span").text(&task.title))
         )
         .child(El::new("div")
-            .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700", "mr-2"]))
-            .child(El::new("button").text("Delete").classes(&["text-red-500", "hover:text-red-700"]))
+            .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700"]))
+            .child(El::new("button").text("Delete").classes(&["text-red-500", "hover:text-red-700", "ml-2"]))
         )
 }
 
@@ -62,15 +60,15 @@ fn container_component(signal_tasks: Signal<Vec<Task>>) -> El {
         .classes(&["mx-auto", "my-10", "w-1/2", "bg-white", "shadow-md", "rounded-lg", "p-6"])
         .child(El::new("div").classes(&["flex", "mb-4"])
             .child(El::new("input").attr("id", "title").attr("placeholder", "Add task").classes(&["w-full", "p-2", "mr-2", "rounded", "focus:outline-none"]))
-            .child(El::new("button").text("Add").classes(BUTTON_CLASSES).on_click(move |_s| {
+            .child(El::new("button").text("Add").classes(&["bg-blue-500", "hover:bg-blue-700", "text-white", "p-2", "rounded", "m-2"]).on_click(move |_s| {
 
                 let title_element = dom::query_selector("#title");
                 let title = get_property_string(&title_element, "value");
-                
+
                 let mut tasks = signal_tasks_clone.get();
                 tasks.push(Task { title: title.clone(), done: false });
                 signal_tasks_clone.set(tasks);
-                
+
                 tinyweb::runtime::run(async move {
                     let body = json::object!{ title: title, done: false };
                     let result = fetch_json(HTTPMethod::POST, format!("/api/tasks"), Some(body)).await;
@@ -100,7 +98,7 @@ fn tasks_page() -> El {
     let task_1 = Task { title: "title".to_owned(), done: false };
     let signal_tasks = Signal::new(vec![task_1]);
     let signal_tasks_clone = signal_tasks.clone();
-    
+
     // time signal
     let signal_time = SignalAsync::new("-");
     let signal_time_clone = signal_time.clone();
@@ -121,13 +119,7 @@ fn tasks_page() -> El {
 
         })
         .classes(&["m-2"])
-        .child(El::new("button").text("api").classes(BUTTON_CLASSES).on_click(|_| {
-            tinyweb::runtime::run(async move {
-                let result = fetch_json(HTTPMethod::GET, format!("/api/ping"), None).await;
-                dom::alert(&format!("{}", result["pong"].as_bool().unwrap()));
-            });
-        }))
-        .child(El::new("button").text("about").classes(BUTTON_CLASSES).on_click(move |_| {
+        .child(El::new("button").text("about").classes(&["underline", "hover:opacity-50", "m-2"]).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("about"); });
         }))
         .child(El::new("div").text("-").on_mount(move |el| {
@@ -146,7 +138,7 @@ fn tasks_page() -> El {
 fn about_page() -> El {
     El::new("div")
         .classes(&["m-2"])
-        .child(El::new("button").text("tasks").classes(BUTTON_CLASSES).on_click(move |_| {
+        .child(El::new("button").text("tasks").classes(&["underline", "hover:opacity-50", "m-2"]).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("tasks"); });
         }))
 }
@@ -159,11 +151,11 @@ pub fn main() {
     // get pages
     let tasks_page = tasks_page();
     let about_page = about_page();
-    
+
     // mount page
     let body = dom::query_selector("body");
     tasks_page.mount(&body);
-    
+
     // set state
     let pages_iter = [("tasks".to_owned(), (tasks_page, None)), ("about".to_owned(), (about_page, None))];
     let pages = HashMap::<String, (El, Option<String>)>::from_iter(pages_iter);
