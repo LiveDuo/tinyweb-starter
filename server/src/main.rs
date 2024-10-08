@@ -9,7 +9,7 @@ struct Task { title: String, done: bool }
 fn main() {
 
     const WASM_TRIPLET: &str = "wasm32-unknown-unknown";
-    
+
     if cfg!(debug_assertions) {
         print!("Building wasm...");
         let p = Command::new("cargo").args(["build", "-p", "client", "--target", WASM_TRIPLET]).output().unwrap();
@@ -48,7 +48,7 @@ fn main() {
 
                 let mut body = String::new();
                 request.as_reader().read_to_string(&mut body).unwrap();
-                
+
                 match request.method().as_str() {
                     "GET" => {
 
@@ -64,14 +64,14 @@ fn main() {
                         let title = value["title"].as_str().unwrap().to_owned();
                         let done = value["done"].as_bool().unwrap();
                         tasks.push(Task { title, done });
-                        
+
                         let message = json::object!{ success: true };
                         let response = Response::from_string(message.dump());
                         request.respond(response.with_header(header)).unwrap();
 
                     },
                     "PUT" => {
-                        
+
                         let id_opt = request.url().split("/").nth(3);
                         if id_opt.is_none() {
                             let response = Response::from_string("Invalid parameter");
@@ -91,7 +91,7 @@ fn main() {
                         let title = value["title"].as_str().unwrap().to_owned();
                         let done = value["done"].as_bool().unwrap();
                         *task_opt.unwrap() = Task { title, done };
-                        
+
                         let message = json::object!{ success: true };
                         let response = Response::from_string(message.dump());
                         request.respond(response.with_header(header)).unwrap();
@@ -115,7 +115,7 @@ fn main() {
                         }
 
                         tasks.remove(id);
-                        
+
                         let message = json::object!{ success: true };
                         let response = Response::from_string(message.dump());
                         request.respond(response.with_header(header)).unwrap();
