@@ -83,6 +83,10 @@ fn container_component() -> El {
                 let title_element = dom::query_selector("#title");
                 let title = get_property_string(&title_element, "value");
 
+                if title == "" {
+                    dom::alert("Task can't be empty");
+                    return
+                }
                 let mut tasks = signal_tasks_clone.get();
                 tasks.push(Task { title: title.clone(), done: false });
                 signal_tasks_clone.set(tasks);
@@ -109,16 +113,16 @@ fn container_component() -> El {
             })
         )
         .child(El::new("div")
-            .classes(&["m-2", "text-center"])
-            .child(El::new("span").text("-").on_mount(move |el| {
+            .classes(&["m-2", "flex"])
+            .child(El::new("span").text("-").classes(&["ml-2"]).on_mount(move |el| {
+                let el_clone = el.clone();
+                signal_time.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
+            }))
+            .child(El::new("span").text("-").classes(&["ml-auto", "mr-2"]).on_mount(move |el| {
                 let el_clone = el.clone();
                 signal_tasks.on(move |tasks| {
                     dom::element_set_inner_html(&el_clone, &format!("Total: {}", tasks.len())); }
                 );
-            }))
-            .child(El::new("span").text("-").classes(&["ml-2"]).on_mount(move |el| {
-                let el_clone = el.clone();
-                signal_time.on(move |v| { dom::element_set_inner_html(&el_clone, &v.to_string()); });
             }))
         )
 }
