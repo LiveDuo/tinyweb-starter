@@ -140,7 +140,8 @@ fn about_page() -> El {
     let body = El::new("div")
         .child(El::new("button").text("tasks").classes(&["underline", "hover:opacity-50", "m-2"]).on_click(move |_| {
             ROUTER.with(|s| { s.borrow().navigate("tasks"); });
-        }));
+        }))
+        .child(El::new("div").text("This is the about page").classes(&["m-2"]));
     layout_component(&[body])
 }
 
