@@ -70,7 +70,7 @@ fn container_component() -> El {
                     Task { title: s["title"].as_str().unwrap().to_string(), done: s["done"].as_bool().unwrap() }
                 }).collect::<Vec<_>>();
 
-                console::console_log(&format!("{:?}", tasks));
+                console::console_log(&format!("Get tasks: {:?}", tasks));
                 // TODO signal_tasks_clone_3.set(tasks);
 
             });
