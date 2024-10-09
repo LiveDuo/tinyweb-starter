@@ -156,16 +156,18 @@ pub fn main() {
 
     std::panic::set_hook(Box::new(|e| console::console_log(&e.to_string())));
 
-    // load page
-    let body = dom::query_selector("body");
+    // get pages
     let pages = [
         ("/tasks".to_owned(), Page { element: tasks_page(), title: None }),
         ("/about".to_owned(), Page { element: about_page(), title: None })
     ];
+
+    // load page
+    let body = dom::query_selector("body");
     let (_, page) = pages.iter().find(|&(s, _)| *s == history::location_pathname()).unwrap_or(&pages[0]);
     page.element.mount(&body);
 
-    // set router
+    // init router
     ROUTER.with(|s| {
         let pages_map = HashMap::<String, Page>::from_iter(pages);
         *s.borrow_mut() = Router { pages: HashMap::from_iter(pages_map), root: Some(body) };
