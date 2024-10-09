@@ -28,20 +28,6 @@ fn main() {
         println!("{:?} {:?}", request.method(), request.url());
 
         match (request.method().as_str(), request.url()) {
-            ("GET", "/") => {
-                let data = std::fs::read_to_string(PathBuf::from("public").join("index.html")).unwrap();
-                let header = "Content-type: text/html".parse::<Header>().unwrap();
-                let response = Response::from_string(data);
-                request.respond(response.with_header(header)).unwrap();
-            },
-            ("GET", "/client.wasm") => {
-                let mode = if cfg!(debug_assertions) { "debug" } else { "release" };
-                let target_path = PathBuf::from("target").join(WASM_TRIPLET).join(mode);
-                let data = std::fs::read(target_path.join("client.wasm")).unwrap();
-                let header = "Content-type: application/wasm".parse::<Header>().unwrap();
-                let response = Response::from_data(data);
-                request.respond(response.with_header(header)).unwrap();
-            },
             (_, _) if request.url().starts_with("/api/tasks") => {
 
                 let header: Header = "Content-type: application/json".parse::<Header>().unwrap();
@@ -127,10 +113,18 @@ fn main() {
                     }
                 }
             },
-            ("GET", "/api/ping") => {
-                let header: Header = "Content-type: application/json".parse::<Header>().unwrap();
-                let message = json::object!{ pong: true };
-                let response = Response::from_string(message.dump());
+            ("GET", "/client.wasm") => {
+                let mode = if cfg!(debug_assertions) { "debug" } else { "release" };
+                let target_path = PathBuf::from("target").join(WASM_TRIPLET).join(mode);
+                let data = std::fs::read(target_path.join("client.wasm")).unwrap();
+                let header = "Content-type: application/wasm".parse::<Header>().unwrap();
+                let response = Response::from_data(data);
+                request.respond(response.with_header(header)).unwrap();
+            },
+            ("GET", _) => {
+                let data = std::fs::read_to_string(PathBuf::from("public").join("index.html")).unwrap();
+                let header = "Content-type: text/html".parse::<Header>().unwrap();
+                let response = Response::from_string(data);
                 request.respond(response.with_header(header)).unwrap();
             },
             _ => {

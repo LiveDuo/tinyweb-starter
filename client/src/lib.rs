@@ -6,7 +6,7 @@ use json::JsonValue;
 use tinyweb::element::{El, Router};
 use tinyweb::signals::{Signal, SignalAsync};
 
-use tinyweb::bindings::{console, dom, http_request};
+use tinyweb::bindings::{console, dom, http_request, history};
 use tinyweb::bindings::http_request::*;
 use tinyweb::bindings::utils::*;
 
@@ -130,7 +130,7 @@ fn container_component() -> El {
 fn tasks_page() -> El {
     let body = El::new("div")
         .child(El::new("button").text("about").classes(&["underline", "hover:opacity-50", "m-2"]).on_click(move |_| {
-            ROUTER.with(|s| { s.borrow().navigate("about"); });
+            ROUTER.with(|s| { s.borrow().navigate("/about"); });
         }))
         .child(container_component());
     layout_component(&[body])
@@ -139,7 +139,7 @@ fn tasks_page() -> El {
 fn about_page() -> El {
     let body = El::new("div")
         .child(El::new("button").text("tasks").classes(&["underline", "hover:opacity-50", "m-2"]).on_click(move |_| {
-            ROUTER.with(|s| { s.borrow().navigate("tasks"); });
+            ROUTER.with(|s| { s.borrow().navigate("/tasks"); });
         }))
         .child(El::new("div").text("This is the about page").classes(&["m-2"]));
     layout_component(&[body])
@@ -156,19 +156,18 @@ pub fn main() {
 
     std::panic::set_hook(Box::new(|e| console::console_log(&e.to_string())));
 
-    // get pages
     let tasks_page = tasks_page();
     let about_page = about_page();
 
-    // mount page
+    // load page
     let body = dom::query_selector("body");
-    tasks_page.mount(&body);
+    let pages = [("/tasks".to_owned(), (tasks_page, None)), ("/about".to_owned(), (about_page, None))];
+    let (_, page) = pages.iter().find(|&(s, _)| *s == history::location_pathname()).unwrap_or(&pages[0]);
+    page.0.mount(&body);
 
-    // set state
-    let pages_iter = [("tasks".to_owned(), (tasks_page, None)), ("about".to_owned(), (about_page, None))];
-    let pages = HashMap::<String, (El, Option<String>)>::from_iter(pages_iter);
+    // set router
     ROUTER.with(|s| {
-        *s.borrow_mut() = Router { pages: HashMap::from_iter(pages), root: Some(body) };
+        let pages_map = HashMap::<String, (El, Option<String>)>::from_iter(pages);
+        *s.borrow_mut() = Router { pages: HashMap::from_iter(pages_map), root: Some(body) };
     });
-
 }
