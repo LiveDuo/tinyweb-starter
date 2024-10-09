@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use json::JsonValue;
-use tinyweb::element::{El, Router};
+use tinyweb::element::{El, Router, Page};
 use tinyweb::signals::{Signal, SignalAsync};
 
 use tinyweb::bindings::{console, dom, http_request, history};
@@ -156,18 +156,18 @@ pub fn main() {
 
     std::panic::set_hook(Box::new(|e| console::console_log(&e.to_string())));
 
-    let tasks_page = tasks_page();
-    let about_page = about_page();
-
     // load page
     let body = dom::query_selector("body");
-    let pages = [("/tasks".to_owned(), (tasks_page, None)), ("/about".to_owned(), (about_page, None))];
+    let pages = [
+        ("/tasks".to_owned(), Page { element: tasks_page(), title: None }),
+        ("/about".to_owned(), Page { element: about_page(), title: None })
+    ];
     let (_, page) = pages.iter().find(|&(s, _)| *s == history::location_pathname()).unwrap_or(&pages[0]);
-    page.0.mount(&body);
+    page.element.mount(&body);
 
     // set router
     ROUTER.with(|s| {
-        let pages_map = HashMap::<String, (El, Option<String>)>::from_iter(pages);
+        let pages_map = HashMap::<String, Page>::from_iter(pages);
         *s.borrow_mut() = Router { pages: HashMap::from_iter(pages_map), root: Some(body) };
     });
 }
