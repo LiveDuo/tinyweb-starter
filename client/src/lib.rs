@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use json::JsonValue;
 use tinyweb::element::{El, Router, Page};
-use tinyweb::signals::{Signal, SignalAsync};
+use tinyweb::signals::SignalAsync;
 
 use tinyweb::bindings::{console, dom, http_request, history};
 use tinyweb::bindings::http_request::*;
@@ -26,7 +26,7 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
     json::parse(&result.unwrap()).unwrap()
 }
 
-fn task_component(_index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) -> El {
+fn task_component(_index: usize, task: &Task, signal_tasks: SignalAsync<Vec<Task>>) -> El {
 
     let _signal_tasks_clone = signal_tasks.clone();
     let _signal_tasks_clone_2 = signal_tasks.clone();
@@ -61,9 +61,10 @@ fn container_component() -> El {
     let signal_time_clone = signal_time.clone();
 
     // tasks signal
-    let signal_tasks = Signal::new(vec![Task { title: "title".to_owned(), done: false }]);
+    let signal_tasks = SignalAsync::new(vec![Task { title: "title".to_owned(), done: false }]);
     let signal_tasks_clone = signal_tasks.clone();
     let signal_tasks_clone_2 = signal_tasks.clone();
+    let signal_tasks_clone_3 = signal_tasks.clone();
     El::new("div")
         .on_mount(move |_| {
 
@@ -78,14 +79,14 @@ fn container_component() -> El {
                 }
             });
 
+            let signal_tasks_clone_3 = signal_tasks_clone_3.clone();
+
             tinyweb::runtime::run(async move {
                 let result = fetch_json(HTTPMethod::GET, format!("/api/tasks"), None).await;
                 let tasks = result["tasks"].members().map(|s| {
                     Task { title: s["title"].as_str().unwrap().to_string(), done: s["done"].as_bool().unwrap() }
                 }).collect::<Vec<_>>();
-
-                console::console_log(&format!("Get tasks: {:?}", tasks));
-                // TODO signal_tasks_clone_3.set(tasks);
+                signal_tasks_clone_3.set(tasks);
 
             });
         })
