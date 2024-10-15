@@ -36,7 +36,7 @@ fn task_component(_index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) -
         .child(El::new("div").classes(&["flex", "items-center"])
             .child(El::new("input").attr("value", &task.done.to_string()).attr("type", "checkbox").classes(&["mr-2"]))
                 // .on_change(move |s| {
-                //     let mut tasks = signal_tasks_clone_3.get();
+                //     let mut tasks = signal_tasks_clone.get();
                 //     tasks[index].done = s.value == "true";
                 //     signal_tasks_clone.set(tasks);
                 // })
@@ -84,14 +84,14 @@ fn container_component() -> El {
                 }
             });
 
-            let signal_tasks_clone_3 = signal_tasks_clone_3.clone();
+            let _signal_tasks_clone_3 = signal_tasks_clone_3.clone();
 
             tinyweb::runtime::run(async move {
                 let result = fetch_json(HTTPMethod::GET, format!("/api/tasks"), None).await;
-                let tasks = result["tasks"].members().map(|s| {
+                let _tasks = result["tasks"].members().map(|s| {
                     Task { title: s["title"].as_str().unwrap().to_string(), done: s["done"].as_bool().unwrap() }
                 }).collect::<Vec<_>>();
-                signal_tasks_clone_3.set(tasks);
+                // signal_tasks_clone_3.set(tasks);
 
             });
         })
