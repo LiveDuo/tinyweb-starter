@@ -26,17 +26,31 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
     json::parse(&result.unwrap()).unwrap()
 }
 
-fn task_component(_index: usize, task: &Task, _signal_tasks: Signal<Vec<Task>>) -> El {
+fn task_component(_index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) -> El {
 
+    let _signal_tasks_clone = signal_tasks.clone();
+    let _signal_tasks_clone_2 = signal_tasks.clone();
     El::new("li")
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
         .child(El::new("div").classes(&["flex", "items-center"])
             .child(El::new("input").attr("value", &task.done.to_string()).attr("type", "checkbox").classes(&["mr-2"]))
+                // .on_click(|_s| { console::console_log("check");})
             .child(El::new("span").text(&task.title))
         )
         .child(El::new("div")
             .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700"]))
+                // .on_click(move |_s| {
+                //     let title = dom::prompt("New title", "");
+                //     let mut tasks = signal_tasks_clone_2.get();
+                //     tasks[index].title = title;
+                //     signal_tasks_clone_2.set(tasks);
+                // })
             .child(El::new("button").text("Delete").classes(&["text-red-500", "hover:text-red-700", "ml-2"]))
+                // .on_click(move |_s| {
+                //     let mut tasks = signal_tasks_clone.get();
+                //     tasks.remove(index);
+                //     signal_tasks_clone.set(tasks);
+                // })
         )
 }
 
