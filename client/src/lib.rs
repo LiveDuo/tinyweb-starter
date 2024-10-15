@@ -26,36 +26,42 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
     json::parse(&result.unwrap()).unwrap()
 }
 
-fn task_component(_index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) -> El {
+fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) -> El {
 
-    let _signal_tasks_clone = signal_tasks.clone();
-    let _signal_tasks_clone_2 = signal_tasks.clone();
-    let _signal_tasks_clone_3 = signal_tasks.clone();
+    let signal_tasks_clone = signal_tasks.clone();
+    let signal_tasks_clone_2 = signal_tasks.clone();
+    let signal_tasks_clone_3 = signal_tasks.clone();
     El::new("li")
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
         .child(El::new("div").classes(&["flex", "items-center"])
-            .child(El::new("input").attr("value", &task.done.to_string()).attr("type", "checkbox").classes(&["mr-2"]))
-                // .on_change(move |s| {
-                //     let mut tasks = signal_tasks_clone.get();
-                //     tasks[index].done = s.value == "true";
-                //     signal_tasks_clone.set(tasks);
-                // })
+            .child(El::new("input").attr("id", &format!("checkbox-{}", index)).attr("value", &task.done.to_string()).attr("type", "checkbox").classes(&["mr-2"]))
+                .on_change(move |s| {
+
+                    let checkbox_element = dom::query_selector(&format!("#checkbox-{}", index));
+                    set_property_bool(&checkbox_element, "checked", s.value == "false");
+
+                    let mut tasks = signal_tasks_clone.get();
+                    tasks[index].done = s.value == "false";
+                    signal_tasks_clone.set(tasks.clone());
+
+                    console::console_log(&format!("{:?} {:?}", tasks, s.value));
+                })
             .child(El::new("span").text(&task.title))
         )
         .child(El::new("div")
             .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700"]))
-                // .on_click(move |_s| {
-                //     let title = dom::prompt("New title", "");
-                //     let mut tasks = signal_tasks_clone_2.get();
-                //     tasks[index].title = title;
-                //     signal_tasks_clone_2.set(tasks);
-                // })
+                .on_click(move |_s| {
+                    let title = dom::prompt("New title", "");
+                    let mut tasks = signal_tasks_clone_2.get();
+                    tasks[index].title = title;
+                    signal_tasks_clone_2.set(tasks);
+                })
             .child(El::new("button").text("Delete").classes(&["text-red-500", "hover:text-red-700", "ml-2"]))
-                // .on_click(move |_s| {
-                //     let mut tasks = signal_tasks_clone.get();
-                //     tasks.remove(index);
-                //     signal_tasks_clone_3.set(tasks);
-                // })
+                .on_click(move |_s| {
+                    let mut tasks = signal_tasks_clone_3.get();
+                    tasks.remove(index);
+                    signal_tasks_clone_3.set(tasks);
+                })
         )
 }
 
@@ -84,14 +90,14 @@ fn container_component() -> El {
                 }
             });
 
-            let _signal_tasks_clone_3 = signal_tasks_clone_3.clone();
+            let signal_tasks_clone_3 = signal_tasks_clone_3.clone();
 
             tinyweb::runtime::run(async move {
                 let result = fetch_json(HTTPMethod::GET, format!("/api/tasks"), None).await;
-                let _tasks = result["tasks"].members().map(|s| {
+                let tasks = result["tasks"].members().map(|s| {
                     Task { title: s["title"].as_str().unwrap().to_string(), done: s["done"].as_bool().unwrap() }
                 }).collect::<Vec<_>>();
-                // signal_tasks_clone_3.set(tasks);
+                signal_tasks_clone_3.set(tasks);
 
             });
         })

@@ -205,7 +205,7 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 [[package]]
 name = "tinyweb"
 version = "0.1.0"
-source = "git+https://github.com/LiveDuo/tinyweb#09385d4a10ee81c544a415530a34027d948ce6ac"
+source = "git+https://github.com/LiveDuo/tinyweb?branch=bug/mutex-issue#53c11ec3acdd4082ce31983cbb8e5cc0becdc0a5"
 
 [[package]]
 name = "unicode-bidi"

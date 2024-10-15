@@ -4,9 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type =["cdylib"]
+crate-type = ["cdylib"]
 
 [dependencies]
-tinyweb = { git = "https://github.com/LiveDuo/tinyweb" }
+tinyweb = { git = "https://github.com/LiveDuo/tinyweb", branch = "bug/mutex-issue" }
 json = "0.12.4"
-
