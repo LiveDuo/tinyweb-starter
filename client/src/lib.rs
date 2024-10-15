@@ -30,11 +30,16 @@ fn task_component(_index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) -
 
     let _signal_tasks_clone = signal_tasks.clone();
     let _signal_tasks_clone_2 = signal_tasks.clone();
+    let _signal_tasks_clone_3 = signal_tasks.clone();
     El::new("li")
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
         .child(El::new("div").classes(&["flex", "items-center"])
             .child(El::new("input").attr("value", &task.done.to_string()).attr("type", "checkbox").classes(&["mr-2"]))
-                // .on_click(|_s| { console::console_log("check");})
+                // .on_change(move |s| {
+                //     let mut tasks = signal_tasks_clone_3.get();
+                //     tasks[index].done = s.value == "true";
+                //     signal_tasks_clone.set(tasks);
+                // })
             .child(El::new("span").text(&task.title))
         )
         .child(El::new("div")
@@ -49,7 +54,7 @@ fn task_component(_index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) -
                 // .on_click(move |_s| {
                 //     let mut tasks = signal_tasks_clone.get();
                 //     tasks.remove(index);
-                //     signal_tasks_clone.set(tasks);
+                //     signal_tasks_clone_3.set(tasks);
                 // })
         )
 }
