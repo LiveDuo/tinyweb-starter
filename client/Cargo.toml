@@ -7,5 +7,5 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-tinyweb = { git = "https://github.com/LiveDuo/tinyweb", branch = "bug/mutex-issue" }
+tinyweb = { git = "https://github.com/LiveDuo/tinyweb" }
 json = "0.12.4"
