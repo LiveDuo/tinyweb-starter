@@ -51,19 +51,19 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
             .child(El::new("span").classes(&text_classes).text(&task.title))
         )
         .child(El::new("div")
-            .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700"]))
+            .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700"])
                 .on_click(move |_s| {
                     let title = dom::prompt("New title", "");
                     let mut tasks = signal_tasks_clone_2.get();
                     tasks[index].title = title;
                     signal_tasks_clone_2.set(tasks);
-                })
-            .child(El::new("button").text("Delete").classes(&["text-red-500", "hover:text-red-700", "ml-2"]))
+                }))
+            .child(El::new("button").text("Delete").classes(&["text-red-500", "hover:text-red-700", "ml-2"])
                 .on_click(move |_s| {
                     let mut tasks = signal_tasks_clone_3.get();
                     tasks.remove(index);
                     signal_tasks_clone_3.set(tasks);
-                })
+                }))
         )
 }
 
