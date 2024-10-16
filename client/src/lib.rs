@@ -33,6 +33,8 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
     let signal_tasks_clone_3 = signal_tasks.clone();
 
     let is_done = task.done.clone();
+    let text_classes = if is_done { vec!["line-through"] } else { vec![] };
+
     El::new("li")
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
         .child(El::new("div").classes(&["flex", "items-center"])
@@ -41,13 +43,12 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
 
                     let checkbox_element = dom::query_selector(&format!("#checkbox-{}", index));
                     let checked = get_property_string(&checkbox_element, "checked");
-                    set_property_bool(&checkbox_element, "checked", checked == "true");
 
                     let mut tasks = signal_tasks_clone.get();
                     tasks[index].done = checked == "true";
-                    signal_tasks_clone.set(tasks.clone());
+                    signal_tasks_clone.set(tasks);
                 })
-            .child(El::new("span").text(&task.title))
+            .child(El::new("span").classes(&text_classes).text(&task.title))
         )
         .child(El::new("div")
             .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700"]))
