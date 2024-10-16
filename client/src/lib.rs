@@ -31,20 +31,21 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
     let signal_tasks_clone = signal_tasks.clone();
     let signal_tasks_clone_2 = signal_tasks.clone();
     let signal_tasks_clone_3 = signal_tasks.clone();
+
+    let is_done = task.done.clone();
     El::new("li")
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
         .child(El::new("div").classes(&["flex", "items-center"])
-            .child(El::new("input").attr("id", &format!("checkbox-{}", index)).attr("value", &task.done.to_string()).attr("type", "checkbox").classes(&["mr-2"]))
-                .on_change(move |s| {
+            .child(El::new("input").attr("id", &format!("checkbox-{}", index)).attr_fn("checked", "", move || is_done).attr("type", "checkbox").classes(&["mr-2"]))
+                .on_change(move |_s| {
 
                     let checkbox_element = dom::query_selector(&format!("#checkbox-{}", index));
-                    set_property_bool(&checkbox_element, "checked", s.value == "false");
+                    let checked = get_property_string(&checkbox_element, "checked");
+                    set_property_bool(&checkbox_element, "checked", checked == "true");
 
                     let mut tasks = signal_tasks_clone.get();
-                    tasks[index].done = s.value == "false";
+                    tasks[index].done = checked == "true";
                     signal_tasks_clone.set(tasks.clone());
-
-                    console::console_log(&format!("{:?} {:?}", tasks, s.value));
                 })
             .child(El::new("span").text(&task.title))
         )
@@ -72,7 +73,7 @@ fn container_component() -> El {
     let signal_time_clone = signal_time.clone();
 
     // tasks signal
-    let signal_tasks = Signal::new(vec![Task { title: "title".to_owned(), done: false }]);
+    let signal_tasks = Signal::new(vec![]);
     let signal_tasks_clone = signal_tasks.clone();
     let signal_tasks_clone_2 = signal_tasks.clone();
     let signal_tasks_clone_3 = signal_tasks.clone();
