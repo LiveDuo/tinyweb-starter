@@ -46,7 +46,15 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
 
                     let mut tasks = signal_tasks_clone.get();
                     tasks[index].done = checked == "true";
-                    signal_tasks_clone.set(tasks);
+                    signal_tasks_clone.set(tasks.clone());
+
+                    let task = tasks[index].clone();
+                    tinyweb::runtime::run(async move {
+                        let body = json::object!{ title: task.title, done: task.done };
+                        let result = fetch_json(HTTPMethod::PUT, format!("/api/tasks/{}", index), Some(body)).await;
+                        let success = result["success"].as_bool().unwrap();
+                        assert!(success);
+                    });
                 })
             .child(El::new("span").classes(&text_classes).text(&task.title))
         )
@@ -56,13 +64,27 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
                     let title = dom::prompt("New title", "");
                     let mut tasks = signal_tasks_clone_2.get();
                     tasks[index].title = title;
-                    signal_tasks_clone_2.set(tasks);
+                    signal_tasks_clone_2.set(tasks.clone());
+
+                    let task = tasks[index].clone();
+                    tinyweb::runtime::run(async move {
+                        let body = json::object!{ title: task.title, done: task.done };
+                        let result = fetch_json(HTTPMethod::PUT, format!("/api/tasks/{}", index), Some(body)).await;
+                        let success = result["success"].as_bool().unwrap();
+                        assert!(success);
+                    });
                 }))
             .child(El::new("button").text("Delete").classes(&["text-red-500", "hover:text-red-700", "ml-2"])
                 .on_click(move |_s| {
                     let mut tasks = signal_tasks_clone_3.get();
                     tasks.remove(index);
-                    signal_tasks_clone_3.set(tasks);
+                    signal_tasks_clone_3.set(tasks.clone());
+
+                    tinyweb::runtime::run(async move {
+                        let result = fetch_json(HTTPMethod::DELETE, format!("/api/tasks/{}", index), None).await;
+                        let success = result["success"].as_bool().unwrap();
+                        assert!(success);
+                    });
                 }))
         )
 }
