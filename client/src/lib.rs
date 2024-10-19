@@ -6,8 +6,8 @@ use json::JsonValue;
 use tinyweb::element::{El, Router, Page};
 use tinyweb::signals::Signal;
 
-use tinyweb::bindings::{console, dom, http_request, history};
-use tinyweb::bindings::http_request::*;
+use tinyweb::bindings::{window, dom, http};
+use tinyweb::bindings::http::*;
 use tinyweb::bindings::utils::*;
 
 #[derive(Clone, Debug)]
@@ -21,7 +21,7 @@ async fn fetch_json(method: HTTPMethod, url: String, body: Option<JsonValue>) ->
     let body_temp = body.map(|s| s.dump());
     let body = body_temp.as_ref().map(|s| s.as_str());
     let fetch_options = FetchOptions { action: method, url: &url, body, ..Default::default()};
-    let fetch_res = http_request::fetch(fetch_options).await;
+    let fetch_res = http::fetch(fetch_options).await;
     let result = match fetch_res { FetchResponse::Text(_, d) => Ok(d), _ => Err(()), };
     json::parse(&result.unwrap()).unwrap()
 }
@@ -204,7 +204,7 @@ fn layout_component(children: &[El]) -> El {
 #[no_mangle]
 pub fn main() {
 
-    std::panic::set_hook(Box::new(|e| console::console_log(&e.to_string())));
+    std::panic::set_hook(Box::new(|e| window::console_log(&e.to_string())));
 
     // get pages
     let pages = [
@@ -214,7 +214,7 @@ pub fn main() {
 
     // load page
     let body = dom::query_selector("body");
-    let (_, page) = pages.iter().find(|&(s, _)| *s == history::location_pathname()).unwrap_or(&pages[0]);
+    let (_, page) = pages.iter().find(|&(s, _)| *s == window::location_pathname()).unwrap_or(&pages[0]);
     page.element.mount(&body);
 
     // init router
