@@ -1,0 +1,12 @@
+[package]
+name = "client"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+tinyweb = { git = "https://github.com/LiveDuo/tinyweb" }
+# tinyweb = { path = "../../tinyweb/src/rust" }
+json = "0.12.4"
