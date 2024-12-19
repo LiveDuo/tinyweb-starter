@@ -34,7 +34,7 @@ async fn fetch_json(method: HttpMethod, url: &str, body: Option<JsonValue>) -> R
 pub fn sleep(ms: impl Into<f64>) -> impl Future<Output = ()> {
     let future = RuntimeFuture::new();
     let callback_ref = create_future_callback(future.id());
-    Js::invoke("window.setTimeout({},{})", &[Ref(&callback_ref), Number(ms.into())]);
+    Js::invoke("window.setTimeout({},{})", &[Ref(callback_ref), Number(ms.into())]);
     future
 }
 
@@ -54,11 +54,11 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
                 .on_event("change", move |_s| {
 
                     let checkbox_id = &format!("#checkbox-{}", index);
-                    let checkbox_element = Js::invoke_ref("return document.querySelector({})", &[Str(checkbox_id)]);
-                    let checked = Js::invoke_str("return {}[{}]", &[Ref(&checkbox_element), Str("checked")]);
+                    let checkbox_element = Js::invoke("return document.querySelector({})", &[Str(checkbox_id.into())]).to_ref().unwrap();
+                    let checked = Js::invoke("return {}[{}]", &[Ref(checkbox_element), Str("checked".into())]).to_bool().unwrap();
 
                     let mut tasks = signal_tasks_clone.get();
-                    tasks[index].done = checked == "true";
+                    tasks[index].done = checked;
                     signal_tasks_clone.set(tasks.clone());
 
                     let task = tasks[index].clone();
@@ -75,7 +75,7 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
         .child(El::new("div")
             .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700"])
                 .on_event("click", move |_s| {
-                    let title = Js::invoke_str("return prompt({},{})", &[Str("New title"), Str("")]);
+                    let title = Js::invoke("return prompt({},{})", &[Str("New title".into()), Str("".into())]).to_str().unwrap();
                     let mut tasks = signal_tasks_clone_2.get();
                     tasks[index].title = title;
                     signal_tasks_clone_2.set(tasks.clone());
@@ -146,11 +146,11 @@ fn container_component() -> El {
             .child(El::new("input").attr("id", "title").attr("placeholder", "Add task").classes(&["w-full", "p-2", "mr-2", "rounded", "focus:outline-none"]))
             .child(El::new("button").text("Add").classes(&["bg-blue-500", "hover:bg-blue-700", "text-white", "p-2", "rounded", "m-2"]).on_event("click", move |_s| {
 
-                let title_element = Js::invoke_ref("return document.querySelector({})", &[Str("#title")]);
-                let title = Js::invoke_str("return {}[{}]", &[Ref(&title_element), Str("value")]);
+                let title_element = Js::invoke("return document.querySelector({})", &[Str("#title".into())]).to_ref().unwrap();
+                let title = Js::invoke("return {}[{}]", &[Ref(title_element), Str("value".into())]).to_str().unwrap();
 
                 if title == "" {
-                    Js::invoke("alert({})", &[Str("Task can't be empty")]);
+                    Js::invoke("alert({})", &[Str("Task can't be empty".into())]);
                     return
                 }
                 let mut tasks = signal_tasks_clone.get();
@@ -164,7 +164,7 @@ fn container_component() -> El {
                     assert!(success);
                 });
 
-                Js::invoke("{}[{}] = {}", &[Ref(&title_element), Str("value"), Str("")]);
+                Js::invoke("{}[{}] = {}", &[Ref(title_element), Str("value".into()), Str("".into())]);
             }))
         )
         .child(El::new("div")
@@ -182,13 +182,13 @@ fn container_component() -> El {
             .classes(&["m-2", "flex"])
             .child(El::new("span").text("-").classes(&["ml-2"]).on_mount(move |el| {
                 let el_clone = el.clone();
-                signal_time.on(move |v| { Js::invoke("{}.innerHTML = {}", &[Ref(&el_clone), Str(&v.to_string())]); });
+                signal_time.on(move |v| { Js::invoke("{}.innerHTML = {}", &[Ref(*el_clone), Str(v.to_string())]); });
             }))
             .child(El::new("span").text("-").classes(&["ml-auto", "mr-2"]).on_mount(move |el| {
                 let el_clone = el.clone();
                 signal_tasks.on(move |tasks| {
                     let message = format!("Total: {}", tasks.len());
-                    Js::invoke("{}.innerHTML = {}", &[Ref(&el_clone), Str(&message)]);
+                    Js::invoke("{}.innerHTML = {}", &[Ref(*el_clone), Str(message.into())]);
                 });
             }))
         )
@@ -221,7 +221,7 @@ fn layout_component(children: &[El]) -> El {
 #[no_mangle]
 pub fn main() {
 
-    std::panic::set_hook(Box::new(|e| { Js::invoke("console.log({})", &[Str(&e.to_string())]); }));
+    std::panic::set_hook(Box::new(|e| { Js::invoke("console.log({})", &[Str(e.to_string())]); }));
 
     // get pages
     let pages = [
@@ -230,8 +230,8 @@ pub fn main() {
     ];
 
     // load page
-    let body = Js::invoke_ref("return document.querySelector({})", &[Str("body")]);
-    let pathname = Js::invoke_str("return window.location.pathname", &[]);
+    let body = Js::invoke("return document.querySelector({})", &[Str("body".into())]).to_ref().unwrap();
+    let pathname = Js::invoke("return window.location.pathname", &[]).to_str().unwrap();
     let (_, page) = pages.iter().find(|&(s, _)| *s == pathname).unwrap_or(&pages[0]);
     page.element.mount(&body);
 
