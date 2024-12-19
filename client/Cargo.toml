@@ -7,6 +7,6 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-tinyweb = { git = "https://github.com/LiveDuo/tinyweb" }
+tinyweb = { git = "https://github.com/LiveDuo/tinyweb", branch = "feature/invoke-result" }
 # tinyweb = { path = "../../tinyweb/src/rust" }
 json = "0.12.4"
