@@ -55,7 +55,7 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
 
                     let checkbox_id = &format!("#checkbox-{}", index);
                     let checkbox_element = Js::invoke("return document.querySelector({})", &[Str(checkbox_id.into())]).to_ref().unwrap();
-                    let checked = Js::invoke("return {}['{}']", &[Ref(checkbox_element), Str("checked".into())]).to_bool().unwrap();
+                    let checked = Js::invoke("return {}[{}]", &[Ref(checkbox_element), Str("checked".into())]).to_bool().unwrap();
 
                     let mut tasks = signal_tasks_clone.get();
                     tasks[index].done = checked;
