@@ -226,7 +226,8 @@ pub fn main() {
     // get pages
     let pages = [
         ("/tasks".to_owned(), Page { element: tasks_page(), title: None }),
-        ("/about".to_owned(), Page { element: about_page(), title: None })
+        ("/about".to_owned(), Page { element: about_page(), title: None }),
+        ("/".to_owned(), Page { element: tasks_page(), title: None })
     ];
 
     // load page
