@@ -20,8 +20,7 @@ thread_local! {
     pub static ROUTER: RefCell<Router> = RefCell::new(Router::default());
 }
 
-async fn fetch_json(method: &str, url: &str, body: Option<JsonValue>) -> Result<JsonValue, String> {
-    let body = body.map(|s| s.dump()).unwrap_or_default();
+async fn fetch(method: &str, url: &str, body: String) -> Result<String, String> {
     let (callback_ref, future) = create_async_callback();
     let request = r#"
         const options = { method: {}, headers: { 'Content-Type': 'application/json' }, body: p0 !== 'GET' ? {} : null };
@@ -30,6 +29,12 @@ async fn fetch_json(method: &str, url: &str, body: Option<JsonValue>) -> Result<
     Js::invoke(request, &[Str(method.into()), Str(body), Str(url.into()), Ref(callback_ref)]);
     let object_id = future.await;
     let result = Js::invoke("return JSON.stringify(objects[{}])", &[Number(*object_id as f64)]).to_str().unwrap();
+    Ok(result)
+}
+
+async fn fetch_json(method: &str, url: &str, body: Option<JsonValue>) -> Result<JsonValue, String> {
+    let body = body.map(|s| s.dump()).unwrap_or_default();
+    let result = fetch(method, url, body).await.unwrap();
     json::parse(&result).map_err(|_| "Parse error".to_owned())
 }
 
