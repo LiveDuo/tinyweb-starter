@@ -5,13 +5,12 @@ use std::cell::RefCell;
 
 use json::JsonValue;
 
-use tinyweb::handlers::create_future_callback;
-use tinyweb::runtime::{Runtime, RuntimeFuture};
+use tinyweb::callbacks::create_async_callback;
 use tinyweb::router::{Router, Page};
+use tinyweb::runtime::Runtime;
 use tinyweb::signals::Signal;
 use tinyweb::element::El;
 
-use tinyweb::http::*;
 use tinyweb::invoke::*;
 
 #[derive(Clone, Debug)]
@@ -21,20 +20,22 @@ thread_local! {
     pub static ROUTER: RefCell<Router> = RefCell::new(Router::default());
 }
 
-async fn fetch_json(method: HttpMethod, url: &str, body: Option<JsonValue>) -> Result<JsonValue, String> {
-    let body_temp = body.map(|s| s.dump());
-    let body = body_temp.as_ref().map(|s| s.as_str());
-    let fetch_options = FetchOptions { method, url, body, ..Default::default() };
-    match fetch(fetch_options).await {
-        FetchResponse::Text(_, result) => json::parse(&result).map_err(|_| "Parse error".to_owned()),
-        _ => Err("Fetch error".to_owned())
-    }
+async fn fetch_json(method: &str, url: &str, body: Option<JsonValue>) -> Result<JsonValue, String> {
+    let body = body.map(|s| s.dump()).unwrap_or_default();
+    let (callback_ref, future) = create_async_callback();
+    let request = r#"
+        const options = { method: {}, headers: { 'Content-Type': 'application/json' }, body: p0 !== 'GET' ? {} : null };
+        fetch({}, options).then(r => r.json()).then(r => { {}(r) })
+    "#;
+    Js::invoke(request, &[Str(method.into()), Str(body), Str(url.into()), Ref(callback_ref)]);
+    let object_id = future.await;
+    let result = Js::invoke("return JSON.stringify(objects[{}])", &[Number(*object_id as f64)]).to_str().unwrap();
+    json::parse(&result).map_err(|_| "Parse error".to_owned())
 }
 
-pub fn sleep(ms: impl Into<f64>) -> impl Future<Output = ()> {
-    let future = RuntimeFuture::new();
-    let callback_ref = create_future_callback(future.id());
-    Js::invoke("window.setTimeout({},{})", &[Ref(callback_ref), Number(ms.into())]);
+pub fn promise<F: FnOnce(ObjectRef) -> Vec<JsValue> + 'static>(code: &str, params_fn: F) -> impl Future<Output = ObjectRef> {
+    let (callback_ref, future) = create_async_callback();
+    Js::invoke(code, &params_fn(callback_ref));
     future
 }
 
@@ -65,7 +66,7 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
                     Runtime::block_on(async move {
                         let body = json::object!{ title: task.title, done: task.done };
                         let url = format!("/api/tasks/{}", index);
-                        let result = fetch_json(HttpMethod::PUT, &url, Some(body)).await.unwrap();
+                        let result = fetch_json("PUT", &url, Some(body)).await.unwrap();
                         let success = result["success"].as_bool().unwrap();
                         assert!(success);
                     });
@@ -84,7 +85,7 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
                     Runtime::block_on(async move {
                         let body = json::object!{ title: task.title, done: task.done };
                         let url = format!("/api/tasks/{}", index);
-                        let result = fetch_json(HttpMethod::PUT, &url, Some(body)).await.unwrap();
+                        let result = fetch_json("PUT", &url, Some(body)).await.unwrap();
                         let success = result["success"].as_bool().unwrap();
                         assert!(success);
                     });
@@ -97,7 +98,7 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
 
                     Runtime::block_on(async move {
                         let url = format!("/api/tasks/{}", index);
-                        let result = fetch_json(HttpMethod::DELETE, &url, None).await.unwrap();
+                        let result = fetch_json("DELETE", &url, None).await.unwrap();
                         let success = result["success"].as_bool().unwrap();
                         assert!(success);
                     });
@@ -124,16 +125,17 @@ fn container_component() -> El {
             Runtime::block_on(async move {
                 loop {
                     signal_time_clone.set("⏰ tik");
-                    sleep(1_000).await;
+                    promise("window.setTimeout({},{})", move |c| vec![Ref(c), Number(1_000.into())]).await;
+
                     signal_time_clone.set("⏰ tok");
-                    sleep(1_000).await;
+                    promise("window.setTimeout({},{})", move |c| vec![Ref(c), Number(1_000.into())]).await;
                 }
             });
 
             let signal_tasks_clone_3 = signal_tasks_clone_3.clone();
 
             Runtime::block_on(async move {
-                let result = fetch_json(HttpMethod::GET, "/api/tasks", None).await.unwrap();
+                let result = fetch_json("GET", "/api/tasks", None).await.unwrap();
                 let tasks = result["tasks"].members().map(|s| {
                     Task { title: s["title"].as_str().unwrap().to_string(), done: s["done"].as_bool().unwrap() }
                 }).collect::<Vec<_>>();
@@ -159,7 +161,7 @@ fn container_component() -> El {
 
                 Runtime::block_on(async move {
                     let body = json::object!{ title: title, done: false };
-                    let result = fetch_json(HttpMethod::POST, "/api/tasks", Some(body)).await.unwrap();
+                    let result = fetch_json("POST", "/api/tasks", Some(body)).await.unwrap();
                     let success = result["success"].as_bool().unwrap();
                     assert!(success);
                 });
@@ -182,13 +184,13 @@ fn container_component() -> El {
             .classes(&["m-2", "flex"])
             .child(El::new("span").text("-").classes(&["ml-2"]).on_mount(move |el| {
                 let el_clone = el.clone();
-                signal_time.on(move |v| { Js::invoke("{}.innerHTML = {}", &[Ref(*el_clone), Str(v.to_string())]); });
+                signal_time.on(move |v| { Js::invoke("{}.innerHTML = {}", &[Ref(el_clone.element), Str(v.to_string())]); });
             }))
             .child(El::new("span").text("-").classes(&["ml-auto", "mr-2"]).on_mount(move |el| {
                 let el_clone = el.clone();
                 signal_tasks.on(move |tasks| {
                     let message = format!("Total: {}", tasks.len());
-                    Js::invoke("{}.innerHTML = {}", &[Ref(*el_clone), Str(message.into())]);
+                    Js::invoke("{}.innerHTML = {}", &[Ref(el_clone.element), Str(message.into())]);
                 });
             }))
         )
