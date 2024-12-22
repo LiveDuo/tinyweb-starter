@@ -63,4 +63,4 @@ dependencies = [
 [[package]]
 name = "tinyweb"
 version = "0.1.0"
-source = "git+https://github.com/LiveDuo/tinyweb#43e0a495e8530de032bcc1f6a5f0e5a9a8ff84f6"
+source = "git+https://github.com/LiveDuo/tinyweb#8126a3c5ac64637e7b2aa62d696fee85866ec9eb"
