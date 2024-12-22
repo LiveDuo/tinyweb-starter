@@ -24,7 +24,7 @@ async fn fetch_json(method: &str, url: &str, body: Option<JsonValue>) -> Result<
     let body = body.map(|s| s.dump()).unwrap_or_default();
     let (callback_ref, future) = create_async_callback();
     let request = r#"
-        const options = { method: {}, headers: { 'Content-Type': 'application/json', data: {} } };
+        const options = { method: {}, headers: { 'Content-Type': 'application/json' }, body: p0 !== 'GET' ? {} : null };
         fetch({}, options).then(r => r.json()).then(r => { {}(r) })
     "#;
     Js::invoke(request, &[Str(method.into()), Str(body), Str(url.into()), Ref(callback_ref)]);
