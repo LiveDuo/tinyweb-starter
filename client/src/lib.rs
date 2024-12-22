@@ -33,9 +33,9 @@ async fn fetch_json(method: &str, url: &str, body: Option<JsonValue>) -> Result<
     json::parse(&result).map_err(|_| "Parse error".to_owned())
 }
 
-pub fn sleep(ms: f64) -> impl Future<Output = ObjectRef> {
+pub fn promise<F: FnOnce(ObjectRef) -> Vec<JsValue> + 'static>(code: &str, params_fn: F) -> impl Future<Output = ObjectRef> {
     let (callback_ref, future) = create_async_callback();
-    Js::invoke("window.setTimeout({},{})", &[Ref(callback_ref), Number(ms)]);
+    Js::invoke(code, &params_fn(callback_ref));
     future
 }
 
@@ -125,9 +125,10 @@ fn container_component() -> El {
             Runtime::block_on(async move {
                 loop {
                     signal_time_clone.set("⏰ tik");
-                    sleep(1_000.into()).await;
+                    promise("window.setTimeout({},{})", move |c| vec![Ref(c), Number(1_000.into())]).await;
+
                     signal_time_clone.set("⏰ tok");
-                    sleep(1_000.into()).await;
+                    promise("window.setTimeout({},{})", move |c| vec![Ref(c), Number(1_000.into())]).await;
                 }
             });
 
