@@ -1,5 +1,4 @@
 
-use std::collections::HashMap;
 use std::cell::RefCell;
 
 use json::JsonValue;
@@ -218,22 +217,7 @@ pub fn main() {
 
     std::panic::set_hook(Box::new(|e| { Js::invoke("console.log({})", &[Str(e.to_string())]); }));
 
-    // get pages
-    let pages = [
-        ("/tasks".to_owned(), Page { element: tasks_page(), title: None }),
-        ("/about".to_owned(), Page { element: about_page(), title: None }),
-        ("/".to_owned(), Page { element: tasks_page(), title: None })
-    ];
-
-    // load page
-    let body = Js::invoke("return document.querySelector({})", &[Str("body".into())]).to_ref().unwrap();
-    let pathname = Js::invoke("return window.location.pathname", &[]).to_str().unwrap();
-    let (_, page) = pages.iter().find(|&(s, _)| *s == pathname).unwrap_or(&pages[0]);
-    page.element.mount(&body);
-
     // init router
-    ROUTER.with(|s| {
-        let pages_map = HashMap::<String, Page>::from_iter(pages);
-        *s.borrow_mut() = Router { pages: HashMap::from_iter(pages_map), root: Some(body) };
-    });
+    let pages = &[Page::new("/tasks", tasks_page(), None), Page::new("/about", about_page(), None)];
+    ROUTER.with(|s| { *s.borrow_mut() = Router::new("body", pages); });
 }
