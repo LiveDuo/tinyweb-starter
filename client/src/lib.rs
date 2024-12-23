@@ -26,8 +26,8 @@ async fn fetch_json(method: &str, url: &str, body: Option<JsonValue>) -> Result<
         fetch({}, options).then(r => r.json()).then(r => { {}(r) })
     "#;
     Js::invoke(request, &[method.into(), body.into(), url.into(), callback_ref.into()]);
-    let object_id = future.await;
-    let result = Js::invoke("return JSON.stringify(objects[{}])", &[object_id.into()]).to_str().unwrap();
+    let result_ref = future.await;
+    let result = Js::invoke("return JSON.stringify({})", &[result_ref.into()]).to_str().unwrap();
     json::parse(&result).map_err(|_| "Parse error".to_owned())
 }
 
