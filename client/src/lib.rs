@@ -166,7 +166,8 @@ fn container_component() -> El {
                 let el_clone = el.clone();
                 let signal_clone = signal_tasks_clone_2.clone();
                 signal_tasks_clone_2.on(move |v| {
-                    el_clone.clone().children(&v.iter().enumerate()
+                    let el_clone = el_clone.clone();
+                    el_clone.children(&v.iter().enumerate()
                         .map(|(i, t)| task_component(i, t, signal_clone.clone()))
                         .collect::<Vec<_>>());
                 });
