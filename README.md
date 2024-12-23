@@ -2,8 +2,8 @@
 
 This example shows an basic fullstack application built with *TinyWeb*.
 
-- There are two pages, one with a todo component and a static about page
-- The todo component, uses signals to demostrate how reactivity works
+- There are two pages, one with a `todo` component and a static `about` page
+- The `todo` component, uses signals to demostrate how reactivity works
 - When the state of the application changes it sends a request to the backend that uses the `tiny-http` crate.
 
 ## Development
