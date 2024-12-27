@@ -31,11 +31,7 @@ async fn fetch_json(method: &str, url: &str, body: Option<JsonValue>) -> Result<
     json::parse(&result).map_err(|_| "Parse error".to_owned())
 }
 
-fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) -> El {
-
-    let signal_tasks_clone = signal_tasks.clone();
-    let signal_tasks_clone_2 = signal_tasks.clone();
-    let signal_tasks_clone_3 = signal_tasks.clone();
+fn task_component(index: usize, task: &Task, signal_tasks: &'static Signal<Vec<Task>>) -> El {
 
     let is_done = task.done.clone();
     let text_classes = if is_done { vec!["line-through"] } else { vec![] };
@@ -50,9 +46,9 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
                     let checkbox_element = Js::invoke("return document.querySelector({})", &[checkbox_id.into()]).to_ref().unwrap();
                     let checked = Js::invoke("return {}[{}]", &[checkbox_element.into(), "checked".into()]).to_bool().unwrap();
 
-                    let mut tasks = signal_tasks_clone.get();
+                    let mut tasks = signal_tasks.get();
                     tasks[index].done = checked;
-                    signal_tasks_clone.set(tasks.clone());
+                    signal_tasks.set(tasks.clone());
 
                     let task = tasks[index].clone();
                     Runtime::block_on(async move {
@@ -69,9 +65,9 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
             .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700"])
                 .on_event("click", move |_s| {
                     let title = Js::invoke("return prompt({},{})", &["New title".into(), "".into()]).to_str().unwrap();
-                    let mut tasks = signal_tasks_clone_2.get();
+                    let mut tasks = signal_tasks.get();
                     tasks[index].title = title;
-                    signal_tasks_clone_2.set(tasks.clone());
+                    signal_tasks.set(tasks.clone());
 
                     let task = tasks[index].clone();
                     Runtime::block_on(async move {
@@ -84,9 +80,9 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
                 }))
             .child(El::new("button").text("Delete").classes(&["text-red-500", "hover:text-red-700", "ml-2"])
                 .on_event("click", move |_s| {
-                    let mut tasks = signal_tasks_clone_3.get();
+                    let mut tasks = signal_tasks.get();
                     tasks.remove(index);
-                    signal_tasks_clone_3.set(tasks.clone());
+                    signal_tasks.set(tasks.clone());
 
                     Runtime::block_on(async move {
                         let url = format!("/api/tasks/{}", index);
@@ -100,38 +96,30 @@ fn task_component(index: usize, task: &Task, signal_tasks: Signal<Vec<Task>>) ->
 
 fn container_component() -> El {
 
-    // time signal
+    // signals
     let signal_time = Signal::new("-");
-    let signal_time_clone = signal_time.clone();
-
-    // tasks signal
     let signal_tasks = Signal::new(vec![]);
-    let signal_tasks_clone = signal_tasks.clone();
-    let signal_tasks_clone_2 = signal_tasks.clone();
-    let signal_tasks_clone_3 = signal_tasks.clone();
+
     El::new("div")
         .on_mount(move |_| {
 
             // start timer
-            let signal_time_clone = signal_time_clone.clone();
             Runtime::block_on(async move {
                 loop {
-                    signal_time_clone.set("⏰ tik");
+                    signal_time.set("⏰ tik");
                     promise("window.setTimeout({},{})", move |c| vec![c.into(), 1_000.into()]).await;
 
-                    signal_time_clone.set("⏰ tok");
+                    signal_time.set("⏰ tok");
                     promise("window.setTimeout({},{})", move |c| vec![c.into(), 1_000.into()]).await;
                 }
             });
-
-            let signal_tasks_clone_3 = signal_tasks_clone_3.clone();
 
             Runtime::block_on(async move {
                 let result = fetch_json("GET", "/api/tasks", None).await.unwrap();
                 let tasks = result["tasks"].members().map(|s| {
                     Task { title: s["title"].as_str().unwrap().to_string(), done: s["done"].as_bool().unwrap() }
                 }).collect::<Vec<_>>();
-                signal_tasks_clone_3.set(tasks);
+                signal_tasks.set(tasks);
 
             });
         })
@@ -147,9 +135,9 @@ fn container_component() -> El {
                     Js::invoke("alert({})", &["Task can't be empty".into()]);
                     return
                 }
-                let mut tasks = signal_tasks_clone.get();
+                let mut tasks = signal_tasks.get();
                 tasks.push(Task { title: title.clone(), done: false });
-                signal_tasks_clone.set(tasks);
+                signal_tasks.set(tasks);
 
                 Runtime::block_on(async move {
                     let body = json::object!{ title: title, done: false };
@@ -164,11 +152,10 @@ fn container_component() -> El {
         .child(El::new("div")
             .on_mount(move |el| {
                 let el_clone = el.clone();
-                let signal_clone = signal_tasks_clone_2.clone();
-                signal_tasks_clone_2.on(move |v| {
+                signal_tasks.on(move |v| {
                     let el_clone = el_clone.clone();
                     el_clone.children(&v.iter().enumerate()
-                        .map(|(i, t)| task_component(i, t, signal_clone.clone()))
+                        .map(|(i, t)| task_component(i, t, signal_tasks))
                         .collect::<Vec<_>>());
                 });
             })
