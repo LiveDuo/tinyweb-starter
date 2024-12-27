@@ -151,10 +151,8 @@ fn container_component() -> El {
         )
         .child(El::new("div")
             .on_mount(move |el| {
-                let el_clone = el.clone();
                 signal_tasks.on(move |v| {
-                    let el_clone = el_clone.clone();
-                    el_clone.children(&v.iter().enumerate()
+                    el.to_owned().children(&v.iter().enumerate()
                         .map(|(i, t)| task_component(i, t, signal_tasks))
                         .collect::<Vec<_>>());
                 });
@@ -163,14 +161,12 @@ fn container_component() -> El {
         .child(El::new("div")
             .classes(&["m-2", "flex"])
             .child(El::new("span").text("-").classes(&["ml-2"]).on_mount(move |el| {
-                let el_clone = el.clone();
-                signal_time.on(move |v| { Js::invoke("{}.innerHTML = {}", &[el_clone.element.into(), v.to_string().into()]); });
+                signal_time.on(move |v| { Js::invoke("{}.innerHTML = {}", &[el.element.into(), v.to_string().into()]); });
             }))
             .child(El::new("span").text("-").classes(&["ml-auto", "mr-2"]).on_mount(move |el| {
-                let el_clone = el.clone();
                 signal_tasks.on(move |tasks| {
                     let message = format!("Total: {}", tasks.len());
-                    Js::invoke("{}.innerHTML = {}", &[el_clone.element.into(), message.into()]);
+                    Js::invoke("{}.innerHTML = {}", &[el.element.into(), message.into()]);
                 });
             }))
         )
