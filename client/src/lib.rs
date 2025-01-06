@@ -40,7 +40,7 @@ fn task_component(index: usize, task: &Task, signal_tasks: &'static Signal<Vec<T
         .classes(&["border-b", "border-gray-200", "flex", "items-center", "justify-between", "py-4"])
         .child(El::new("div").classes(&["flex", "items-center"])
             .child(El::new("input").attr("id", &format!("checkbox-{}", index)).attr_fn("checked", "", move || is_done).attr("type", "checkbox").classes(&["mr-2"]))
-                .on_event("change", move |_s| {
+                .on("change", move |_s| {
 
                     let checkbox_id = format!("#checkbox-{}", index);
                     let checkbox_element = Js::invoke("return document.querySelector({})", &[checkbox_id.into()]).to_ref().unwrap();
@@ -63,7 +63,7 @@ fn task_component(index: usize, task: &Task, signal_tasks: &'static Signal<Vec<T
         )
         .child(El::new("div")
             .child(El::new("button").text("Edit").classes(&["text-blue-500", "hover:text-blue-700"])
-                .on_event("click", move |_s| {
+                .on("click", move |_s| {
                     let title = Js::invoke("return prompt({},{})", &["New title".into(), "".into()]).to_str().unwrap();
                     let mut tasks = signal_tasks.get();
                     tasks[index].title = title;
@@ -79,7 +79,7 @@ fn task_component(index: usize, task: &Task, signal_tasks: &'static Signal<Vec<T
                     });
                 }))
             .child(El::new("button").text("Delete").classes(&["text-red-500", "hover:text-red-700", "ml-2"])
-                .on_event("click", move |_s| {
+                .on("click", move |_s| {
                     let mut tasks = signal_tasks.get();
                     tasks.remove(index);
                     signal_tasks.set(tasks.clone());
@@ -101,7 +101,7 @@ fn container_component() -> El {
     let signal_tasks = Signal::new(vec![]);
 
     El::new("div")
-        .on_mount(move |_| {
+        .once(move |_| {
 
             // start timer
             Runtime::block_on(async move {
@@ -126,7 +126,7 @@ fn container_component() -> El {
         .classes(&["mx-auto", "my-10", "w-1/2", "bg-white", "shadow-md", "rounded-lg", "p-6"])
         .child(El::new("div").classes(&["flex", "mb-4"])
             .child(El::new("input").attr("id", "title").attr("placeholder", "Add task").classes(&["w-full", "p-2", "mr-2", "rounded", "focus:outline-none"]))
-            .child(El::new("button").text("Add").classes(&["bg-blue-500", "hover:bg-blue-700", "text-white", "p-2", "rounded", "m-2"]).on_event("click", move |_s| {
+            .child(El::new("button").text("Add").classes(&["bg-blue-500", "hover:bg-blue-700", "text-white", "p-2", "rounded", "m-2"]).on("click", move |_s| {
 
                 let title_element = Js::invoke("return document.querySelector({})", &["#title".into()]).to_ref().unwrap();
                 let title = Js::invoke("return {}[{}]", &[title_element.into(), "value".into()]).to_str().unwrap();
@@ -150,9 +150,10 @@ fn container_component() -> El {
             }))
         )
         .child(El::new("div")
-            .on_mount(move |el| {
+            .once(move |el| {
                 signal_tasks.on(move |v| {
-                    el.to_owned().children(&v.iter().enumerate()
+
+                    El::from(&el).children(&v.iter().enumerate()
                         .map(|(i, t)| task_component(i, t, signal_tasks))
                         .collect::<Vec<_>>());
                 });
@@ -160,13 +161,13 @@ fn container_component() -> El {
         )
         .child(El::new("div")
             .classes(&["m-2", "flex"])
-            .child(El::new("span").text("-").classes(&["ml-2"]).on_mount(move |el| {
-                signal_time.on(move |v| { Js::invoke("{}.innerHTML = {}", &[el.element.into(), v.to_string().into()]); });
+            .child(El::new("span").text("-").classes(&["ml-2"]).once(move |el| {
+                signal_time.on(move |v| { Js::invoke("{}.innerHTML = {}", &[el.into(), v.to_string().into()]); });
             }))
-            .child(El::new("span").text("-").classes(&["ml-auto", "mr-2"]).on_mount(move |el| {
+            .child(El::new("span").text("-").classes(&["ml-auto", "mr-2"]).once(move |el| {
                 signal_tasks.on(move |tasks| {
                     let message = format!("Total: {}", tasks.len());
-                    Js::invoke("{}.innerHTML = {}", &[el.element.into(), message.into()]);
+                    Js::invoke("{}.innerHTML = {}", &[el.into(), message.into()]);
                 });
             }))
         )
@@ -174,7 +175,7 @@ fn container_component() -> El {
 
 fn tasks_page() -> El {
     let body = El::new("div")
-        .child(El::new("button").text("about").classes(&["underline", "hover:opacity-50", "m-2"]).on_event("click", move |_| {
+        .child(El::new("button").text("about").classes(&["underline", "hover:opacity-50", "m-2"]).on("click", move |_| {
             ROUTER.with(|s| { s.borrow().navigate("/about"); });
         }))
         .child(container_component());
@@ -183,7 +184,7 @@ fn tasks_page() -> El {
 
 fn about_page() -> El {
     let body = El::new("div")
-        .child(El::new("button").text("tasks").classes(&["underline", "hover:opacity-50", "m-2"]).on_event("click", move |_| {
+        .child(El::new("button").text("tasks").classes(&["underline", "hover:opacity-50", "m-2"]).on("click", move |_| {
             ROUTER.with(|s| { s.borrow().navigate("/tasks"); });
         }))
         .child(El::new("div").text("This is the about page").classes(&["m-2"]));
