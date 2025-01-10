@@ -203,6 +203,6 @@ pub fn main() {
     std::panic::set_hook(Box::new(|e| { Js::invoke("console.log({})", &[e.to_string().into()]); }));
 
     // init router
-    let pages = &[Page::new("/tasks", tasks_page(), None), Page::new("/about", about_page(), None)];
+    let pages = &[Page::new("/tasks", tasks_page()), Page::new("/about", about_page())];
     ROUTER.with(|s| { *s.borrow_mut() = Router::new("body", pages); });
 }
