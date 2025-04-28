@@ -180,6 +180,9 @@ fn tasks_page() -> El {
         .child(El::new("button").text("about").classes(&["underline", "hover:opacity-50", "m-2"]).on("click", move |_| {
             ROUTER.with(|s| { s.borrow().navigate("/about"); });
         }))
+        .child(El::new("button").text("new page").classes(&["underline", "hover:opacity-50", "m-2"]).on("click", move |_| {
+            ROUTER.with(|s| { s.borrow().navigate("/newpage"); });
+        }))
         .child(container_component());
     layout_component(&[body])
 }
@@ -190,6 +193,29 @@ fn about_page() -> El {
             ROUTER.with(|s| { s.borrow().navigate("/tasks"); });
         }))
         .child(El::new("div").text("This is the about page").classes(&["m-2"]));
+    layout_component(&[body])
+}
+
+fn new_page() -> El {
+
+    let signal_text = Signal::new("-".to_owned());
+
+    let body = El::new("div")
+        .child(El::new("button").text("tasks").classes(&["underline", "hover:opacity-50", "m-2"]).on("click", move |_| {
+            ROUTER.with(|s| { s.borrow().navigate("/tasks"); });
+        }))
+        .child(El::new("br"))
+        .child(El::new("button").text("api call").classes(&["bg-blue-500", "text-white", "p-2", "rounded", "hover:opacity-50", "m-2"]).on_async("click", move |_| async {
+
+            let float = Js::invoke("return Math.random()", &[]).to_num().unwrap();
+            let url = format!("https://pokeapi.co/api/v2/pokemon/{}", (float * 151f64).round());
+            let result = fetch_json("GET", &url, None).await.unwrap();
+            signal_text.set(result["name"].to_string());
+        }))
+        .child(El::new("span").text("-").classes(&["ml-2"]).once(move |el| {
+            signal_text.on(move |v| { Js::invoke("{}.innerHTML = {}", &[el.into(), v.into()]); });
+        }))
+        .child(El::new("div").text("This is the new page").classes(&["m-2"]));
     layout_component(&[body])
 }
 
@@ -205,6 +231,6 @@ pub fn main() {
     std::panic::set_hook(Box::new(|e| { Js::invoke("console.log({})", &[e.to_string().into()]); }));
 
     // init router
-    let pages = &[Page::new("/tasks", tasks_page()), Page::new("/about", about_page())];
+    let pages = &[Page::new("/tasks", tasks_page()), Page::new("/about", about_page()), Page::new("/newpage", new_page())];
     ROUTER.with(|s| { *s.borrow_mut() = Router::new("body", pages); });
 }
