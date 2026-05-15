@@ -39,7 +39,7 @@ dependencies = [
 [[package]]
 name = "tiny_http"
 version = "0.1.0"
-source = "git+https://github.com/LiveDuo/tiny-http#0c06ba6e4d2563338fea95aa23ac2c683c8e7359"
+source = "git+https://github.com/LiveDuo/tiny-http#895db94c45954b9b5164bfba24ef93881ad0a422"
 dependencies = [
  "chunked_transfer",
  "httpdate",
@@ -48,4 +48,4 @@ dependencies = [
 [[package]]
 name = "tinyweb"
 version = "0.1.0"
-source = "git+https://github.com/LiveDuo/tinyweb#dc41cf34f1b58aba359427b8fddfacd58184d8f2"
+source = "git+https://github.com/LiveDuo/tinyweb#45266dc878734e7d94e74d53472b994165828875"

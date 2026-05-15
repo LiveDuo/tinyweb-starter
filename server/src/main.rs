@@ -2,7 +2,7 @@
 use std::process::Command;
 use std::path::PathBuf;
 
-use tiny_http::{Server, Header, Response};
+use tiny_http::{Server, Response};
 
 struct Task { title: String, done: bool }
 
@@ -30,8 +30,6 @@ fn main() {
         match (request.method(), request.url()) {
             (_, _) if request.url().starts_with("/api/tasks") => {
 
-                let header = Header::from("Content-type", "application/json");
-
                 let mut body = String::new();
                 request.as_reader().read_to_string(&mut body).unwrap();
 
@@ -42,7 +40,7 @@ fn main() {
                             .map(|s| json::object!{ title: s.title.to_owned(), done: s.done.to_owned() }).collect::<Vec<_>>();
                         let message = json::object!{ tasks: _tasks };
                         let response = Response::from_string(message.dump());
-                        request.respond(response.with_header(header)).unwrap();
+                        request.respond(response.with_header("Content-type", "application/json")).unwrap();
                     },
                     "POST" => {
 
@@ -53,7 +51,7 @@ fn main() {
 
                         let message = json::object!{ success: true };
                         let response = Response::from_string(message.dump());
-                        request.respond(response.with_header(header)).unwrap();
+                        request.respond(response.with_header("Content-type", "application/json")).unwrap();
 
                     },
                     "PUT" => {
@@ -80,7 +78,7 @@ fn main() {
 
                         let message = json::object!{ success: true };
                         let response = Response::from_string(message.dump());
-                        request.respond(response.with_header(header)).unwrap();
+                        request.respond(response.with_header("Content-type", "application/json")).unwrap();
 
                     },
                     "DELETE" => {
@@ -104,7 +102,7 @@ fn main() {
 
                         let message = json::object!{ success: true };
                         let response = Response::from_string(message.dump());
-                        request.respond(response.with_header(header)).unwrap();
+                        request.respond(response.with_header("Content-type", "application/json")).unwrap();
 
                     },
                     _ => {
@@ -117,15 +115,13 @@ fn main() {
                 let mode = if cfg!(debug_assertions) { "debug" } else { "release" };
                 let target_path = PathBuf::from("target").join(WASM_TRIPLET).join(mode);
                 let data = std::fs::read(target_path.join("client.wasm")).unwrap();
-                let header = Header::from("Content-type", "application/wasm");
                 let response = Response::from_data(data);
-                request.respond(response.with_header(header)).unwrap();
+                request.respond(response.with_header("Content-type", "application/wasm")).unwrap();
             },
             ("GET", _) => {
                 let data = std::fs::read_to_string(PathBuf::from("public").join("index.html")).unwrap();
-                let header = Header::from("Content-type", "text/html");
                 let response = Response::from_string(data);
-                request.respond(response.with_header(header)).unwrap();
+                request.respond(response.with_header("Content-type", "text/html")).unwrap();
             },
             _ => {
                 let response = Response::from_string("Not found");
