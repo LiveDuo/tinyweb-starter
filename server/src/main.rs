@@ -19,23 +19,23 @@ fn main() {
         println!("Done");
     }
 
-    let server = Server::http("0.0.0.0:8080").unwrap();
-    println!("Listening on port {:?}", server.server_addr().to_ip().unwrap().port());
+    let server = Server::new("0.0.0.0:8080", None).unwrap();
+    println!("Listening on port {:?}", server.server_addr().port());
 
     let mut tasks = Vec::<Task>::new();
 
-    for mut request in server.incoming_requests() {
+    for mut request in &server {
         println!("{:?} {:?}", request.method(), request.url());
 
-        match (request.method().as_str(), request.url()) {
+        match (request.method(), request.url()) {
             (_, _) if request.url().starts_with("/api/tasks") => {
 
-                let header: Header = "Content-type: application/json".parse::<Header>().unwrap();
+                let header = Header::from("Content-type", "application/json");
 
                 let mut body = String::new();
                 request.as_reader().read_to_string(&mut body).unwrap();
 
-                match request.method().as_str() {
+                match request.method() {
                     "GET" => {
 
                         let _tasks = tasks.iter()
@@ -117,13 +117,13 @@ fn main() {
                 let mode = if cfg!(debug_assertions) { "debug" } else { "release" };
                 let target_path = PathBuf::from("target").join(WASM_TRIPLET).join(mode);
                 let data = std::fs::read(target_path.join("client.wasm")).unwrap();
-                let header = "Content-type: application/wasm".parse::<Header>().unwrap();
+                let header = Header::from("Content-type", "application/wasm");
                 let response = Response::from_data(data);
                 request.respond(response.with_header(header)).unwrap();
             },
             ("GET", _) => {
                 let data = std::fs::read_to_string(PathBuf::from("public").join("index.html")).unwrap();
-                let header = "Content-type: text/html".parse::<Header>().unwrap();
+                let header = Header::from("Content-type", "text/html");
                 let response = Response::from_string(data);
                 request.respond(response.with_header(header)).unwrap();
             },

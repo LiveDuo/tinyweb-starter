@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 json = "0.12"
-tiny_http = "0.12"
+tiny_http = { git = "https://github.com/LiveDuo/tiny-http"}
