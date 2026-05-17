@@ -25,21 +25,21 @@ fn main() {
     let mut tasks = Vec::<Task>::new();
 
     for mut request in &server {
-        println!("{:?} {:?}", request.method(), request.url());
+        println!("{:?} {:?}", request.method, request.path);
 
-        match (request.method(), request.url()) {
-            (_, _) if request.url().starts_with("/api/tasks") => {
+        match (request.method.as_str(), request.path.as_str()) {
+            (_, _) if request.path.starts_with("/api/tasks") => {
 
                 let mut body = String::new();
                 request.as_reader().read_to_string(&mut body).unwrap();
 
-                match request.method() {
+                match request.method.as_str() {
                     "GET" => {
 
                         let _tasks = tasks.iter()
                             .map(|s| json::object!{ title: s.title.to_owned(), done: s.done.to_owned() }).collect::<Vec<_>>();
                         let message = json::object!{ tasks: _tasks };
-                        let response = Response::from_string(message.dump());
+                        let response = Response::data(message.dump());
                         request.respond(response.with_header("Content-type", "application/json")).unwrap();
                     },
                     "POST" => {
@@ -50,15 +50,15 @@ fn main() {
                         tasks.push(Task { title, done });
 
                         let message = json::object!{ success: true };
-                        let response = Response::from_string(message.dump());
+                        let response = Response::data(message.dump());
                         request.respond(response.with_header("Content-type", "application/json")).unwrap();
 
                     },
                     "PUT" => {
 
-                        let id_opt = request.url().split("/").nth(3);
+                        let id_opt = request.path.split("/").nth(3);
                         if id_opt.is_none() {
-                            let response = Response::from_string("Invalid parameter");
+                            let response = Response::data("Invalid parameter");
                             request.respond(response).unwrap();
                             return;
                         }
@@ -66,7 +66,7 @@ fn main() {
                         let id = id_opt.unwrap().parse::<usize>().unwrap();
                         let task_opt = tasks.get_mut(id);
                         if task_opt.is_none() {
-                            let response = Response::from_string("Task error");
+                            let response = Response::data("Task error");
                             request.respond(response).unwrap();
                             return;
                         }
@@ -77,15 +77,15 @@ fn main() {
                         *task_opt.unwrap() = Task { title, done };
 
                         let message = json::object!{ success: true };
-                        let response = Response::from_string(message.dump());
+                        let response = Response::data(message.dump());
                         request.respond(response.with_header("Content-type", "application/json")).unwrap();
 
                     },
                     "DELETE" => {
 
-                        let id_opt = request.url().split("/").nth(3);
+                        let id_opt = request.path.split("/").nth(3);
                         if id_opt.is_none() {
-                            let response = Response::from_string("Invalid parameter");
+                            let response = Response::data("Invalid parameter");
                             request.respond(response).unwrap();
                             return;
                         }
@@ -93,7 +93,7 @@ fn main() {
                         let id = id_opt.unwrap().parse::<usize>().unwrap();
                         let task_opt = tasks.get_mut(id);
                         if task_opt.is_none() {
-                            let response = Response::from_string("Task error");
+                            let response = Response::data("Task error");
                             request.respond(response).unwrap();
                             return;
                         }
@@ -101,12 +101,12 @@ fn main() {
                         tasks.remove(id);
 
                         let message = json::object!{ success: true };
-                        let response = Response::from_string(message.dump());
+                        let response = Response::data(message.dump());
                         request.respond(response.with_header("Content-type", "application/json")).unwrap();
 
                     },
                     _ => {
-                        let response = Response::from_string("Invalid request");
+                        let response = Response::data("Invalid request");
                         request.respond(response).unwrap();
                     }
                 }
@@ -115,16 +115,16 @@ fn main() {
                 let mode = if cfg!(debug_assertions) { "debug" } else { "release" };
                 let target_path = PathBuf::from("target").join(WASM_TRIPLET).join(mode);
                 let data = std::fs::read(target_path.join("client.wasm")).unwrap();
-                let response = Response::from_data(data);
+                let response = Response::data(data);
                 request.respond(response.with_header("Content-type", "application/wasm")).unwrap();
             },
             ("GET", _) => {
                 let data = std::fs::read_to_string(PathBuf::from("public").join("index.html")).unwrap();
-                let response = Response::from_string(data);
+                let response = Response::data(data);
                 request.respond(response.with_header("Content-type", "text/html")).unwrap();
             },
             _ => {
-                let response = Response::from_string("Not found");
+                let response = Response::data("Not found");
                 request.respond(response).unwrap();
             }
         }
