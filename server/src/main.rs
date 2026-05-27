@@ -39,7 +39,7 @@ fn main() {
                         let _tasks = tasks.iter()
                             .map(|s| json::object!{ title: s.title.to_owned(), done: s.done.to_owned() }).collect::<Vec<_>>();
                         let message = json::object!{ tasks: _tasks };
-                        request.data(message.dump()).with_header("Content-type", "application/json").send().unwrap();
+                        request.data(message.dump()).with_header("content-type", "application/json").send().unwrap();
                     },
                     "POST" => {
 
@@ -49,7 +49,7 @@ fn main() {
                         tasks.push(Task { title, done });
 
                         let message = json::object!{ success: true };
-                        request.data(message.dump()).with_header("Content-type", "application/json").send().unwrap();
+                        request.data(message.dump()).with_header("content-type", "application/json").send().unwrap();
 
                     },
                     "PUT" => {
@@ -73,7 +73,7 @@ fn main() {
                         *task_opt.unwrap() = Task { title, done };
 
                         let message = json::object!{ success: true };
-                        request.data(message.dump()).with_header("Content-type", "application/json").send().unwrap();
+                        request.data(message.dump()).with_header("content-type", "application/json").send().unwrap();
 
                     },
                     "DELETE" => {
@@ -94,7 +94,7 @@ fn main() {
                         tasks.remove(id);
 
                         let message = json::object!{ success: true };
-                        request.data(message.dump()).with_header("Content-type", "application/json").send().unwrap();
+                        request.data(message.dump()).with_header("content-type", "application/json").send().unwrap();
 
                     },
                     _ => {
@@ -106,11 +106,11 @@ fn main() {
                 let mode = if cfg!(debug_assertions) { "debug" } else { "release" };
                 let target_path = PathBuf::from("target").join(WASM_TRIPLET).join(mode);
                 let data = std::fs::read(target_path.join("client.wasm")).unwrap();
-                request.data(data).with_header("Content-type", "application/wasm").send().unwrap();
+                request.data(data).with_header("content-type", "application/wasm").send().unwrap();
             },
             ("GET", _) => {
                 let data = std::fs::read_to_string(PathBuf::from("public").join("index.html")).unwrap();
-                request.data(data).with_header("Content-type", "text/html").send().unwrap();
+                request.data(data).with_header("content-type", "text/html").send().unwrap();
             },
             _ => {
                 request.data("Not found").send().unwrap();
