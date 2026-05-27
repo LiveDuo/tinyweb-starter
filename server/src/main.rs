@@ -31,7 +31,7 @@ fn main() {
             (_, _) if request.path.starts_with("/api/tasks") => {
 
                 let mut body = String::new();
-                request.as_reader().read_to_string(&mut body).unwrap();
+                request.body().read_to_string(&mut body).unwrap();
 
                 match request.method.as_str() {
                     "GET" => {
