@@ -2,7 +2,7 @@
 use std::process::Command;
 use std::path::PathBuf;
 
-use tiny_http::Server;
+use server::Server;
 
 struct Task { title: String, done: bool }
 

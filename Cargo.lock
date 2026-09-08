@@ -33,13 +33,13 @@ name = "server"
 version = "0.1.0"
 dependencies = [
  "json",
- "tiny_http",
+ "server 0.1.0 (git+https://github.com/LiveDuo/lib-http)",
 ]
 
 [[package]]
-name = "tiny_http"
+name = "server"
 version = "0.1.0"
-source = "git+https://github.com/LiveDuo/tiny-http#092ed396a368f7e858b5190ab35a55566b8b8b2f"
+source = "git+https://github.com/LiveDuo/lib-http#4a12dec9d93991b2408cc8cc4128f8c889f1259a"
 dependencies = [
  "chunked_transfer",
  "httpdate",
